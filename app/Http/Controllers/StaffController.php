@@ -42,7 +42,7 @@ class StaffController extends Controller
         $this->saveNested($staff, $request);
 
         return redirect()->route('staff.index')
-            ->with('status', "Created record for {$staff->full_name}.");
+            ->with('status', __('Created record for :name.', ['name' => $staff->full_name]));
     }
 
     public function edit(Stf $staff): View
@@ -64,7 +64,7 @@ class StaffController extends Controller
         $this->saveNested($staff, $request);
 
         return redirect()->route('staff.index')
-            ->with('status', "Updated record for {$staff->full_name}.");
+            ->with('status', __('Updated record for :name.', ['name' => $staff->full_name]));
     }
 
     public function destroy(Stf $staff): RedirectResponse
@@ -78,7 +78,7 @@ class StaffController extends Controller
         $staff->delete();
 
         return redirect()->route('staff.index')
-            ->with('status', "Deleted record for {$name}.");
+            ->with('status', __('Deleted record for :name.', ['name' => $name]));
     }
 
     protected function validateStaff(Request $request): array

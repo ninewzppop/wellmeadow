@@ -25,7 +25,7 @@ if (dataElement) {
             data: {
                 labels,
                 datasets: [{
-                    label: 'ผู้ป่วยใหม่',
+                    label: data.patientLabel,
                     data: data.patientTrend,
                     backgroundColor: 'rgba(14, 116, 144, 0.7)',
                     borderRadius: 4,
@@ -42,7 +42,7 @@ if (dataElement) {
             data: {
                 labels,
                 datasets: [{
-                    label: 'นัดหมาย',
+                    label: data.appointmentLabel,
                     data: data.appointmentTrend,
                     borderColor: '#0e7490',
                     backgroundColor: 'rgba(14, 116, 144, 0.1)',

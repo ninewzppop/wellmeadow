@@ -1,18 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Staff')
+@section('title', __('Staff'))
 
 @section('content')
     <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-slate-900">Staff</h1>
+        <h1 class="text-2xl font-bold text-slate-900">{{ __('Staff') }}</h1>
         <div class="flex gap-3">
             <a href="{{ route('staff.search') }}"
                class="rounded bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200">
-                Search staff
+                {{ __('Search staff') }}
             </a>
             <a href="{{ route('staff.create') }}"
                class="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700">
-                + New staff member
+                {{ __('+ New staff member') }}
             </a>
         </div>
     </div>
@@ -21,12 +21,12 @@
         <table class="min-w-full divide-y divide-slate-200 text-sm">
             <thead class="bg-slate-50">
                 <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    <th class="px-4 py-3">No</th>
-                    <th class="px-4 py-3">Name</th>
-                    <th class="px-4 py-3">Position(s)</th>
-                    <th class="px-4 py-3">Assigned ward</th>
-                    <th class="px-4 py-3">Qualifications</th>
-                    <th class="px-4 py-3">Contact</th>
+                    <th class="px-4 py-3">{{ __('No') }}</th>
+                    <th class="px-4 py-3">{{ __('Name') }}</th>
+                    <th class="px-4 py-3">{{ __('Position(s)') }}</th>
+                    <th class="px-4 py-3">{{ __('Assigned ward') }}</th>
+                    <th class="px-4 py-3">{{ __('Qualifications') }}</th>
+                    <th class="px-4 py-3">{{ __('Contact') }}</th>
                     <th class="px-4 py-3"></th>
                 </tr>
             </thead>
@@ -66,20 +66,20 @@
                             {{ $member->TelNo }}<br>{{ $member->Address }}
                         </td>
                         <td class="px-4 py-3 text-right whitespace-nowrap">
-                            <a href="{{ route('staff.edit', $member) }}" class="text-sky-600 hover:text-sky-800">Edit</a>
+                            <a href="{{ route('staff.edit', $member) }}" class="text-sky-600 hover:text-sky-800">{{ __('Edit') }}</a>
                             <form action="{{ route('staff.destroy', $member) }}" method="POST"
-                                  onsubmit="return confirm('Delete {{ $member->full_name }}?');" class="inline">
+                                  onsubmit="return confirm('{{ addslashes(__('Delete :name?', ['name' => $member->full_name])) }}');" class="inline">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="ml-2 text-red-600 hover:text-red-800">Delete</button>
+                                <button type="submit" class="ml-2 text-red-600 hover:text-red-800">{{ __('Delete') }}</button>
                             </form>
                         </td>
                     </tr>
                 @empty
                     <tr>
                         <td colspan="7" class="px-4 py-10 text-center text-slate-400">
-                            No staff records yet.
-                            <a href="{{ route('staff.create') }}" class="text-sky-600 hover:underline">Add the first one</a>.
+                            {{ __('No staff records yet.') }}
+                            <a href="{{ route('staff.create') }}" class="text-sky-600 hover:underline">{{ __('Add the first one') }}</a>.
                         </td>
                     </tr>
                 @endforelse

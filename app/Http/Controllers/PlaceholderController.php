@@ -12,27 +12,27 @@ class PlaceholderController extends Controller
      * @var array<string, string>
      */
     protected const TITLES = [
-        'patients' => 'ผู้ป่วย',
-        'appointments' => 'นัดหมาย',
-        'in-patients' => 'ผู้ป่วยใน',
-        'medications' => 'ใบสั่งยา',
-        'allergies' => 'อาการแพ้',
-        'wards' => 'วอร์ด',
-        'rooms' => 'ห้องตรวจ',
-        'stock' => 'สต็อกกลาง',
-        'pharmacy' => 'เภสัชภัณฑ์',
-        'requisitions' => 'ใบเบิกของ',
-        'rota' => 'ตารางเวร',
-        'suppliers' => 'ซัพพลายเออร์',
-        'local-doctors' => 'แพทย์ท้องถิ่น',
-        'users' => 'ผู้ใช้ & บทบาท',
+        'patients' => 'Patients',
+        'appointments' => 'Appointments',
+        'in-patients' => 'In-patients',
+        'medications' => 'Medications',
+        'allergies' => 'Allergies',
+        'wards' => 'Wards',
+        'rooms' => 'Rooms',
+        'stock' => 'Stock',
+        'pharmacy' => 'Pharmacy',
+        'requisitions' => 'Requisitions',
+        'rota' => 'Rota',
+        'suppliers' => 'Suppliers',
+        'local-doctors' => 'Local doctors',
+        'users' => 'Users & Roles',
     ];
 
     public function show(string $page): View
     {
         return view('placeholders.index', [
             'page' => $page,
-            'title' => self::TITLES[$page] ?? $page,
+            'title' => __(self::TITLES[$page] ?? $page),
         ]);
     }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Dashboard') &middot; Hospital</title>
+    <title>@yield('title', __('Dashboard')) &middot; {{ __('Hospital System') }}</title>
     @vite('resources/css/app.css')
 </head>
 <body class="h-full font-sans text-slate-800 antialiased">
@@ -21,7 +21,8 @@
                         </svg>
                     </button>
 
-                    <div class="ml-auto">
+                    <div class="ml-auto flex items-center gap-3">
+                        <x-language-switcher />
                         <x-user-dropdown />
                     </div>
                 </header>
@@ -51,7 +52,10 @@
     @endauth
 
     @guest
-        <div class="mx-auto max-w-4xl px-4 py-10">
+        <div class="relative mx-auto max-w-4xl px-4 py-10">
+            <div class="absolute right-4 top-4">
+                <x-language-switcher />
+            </div>
             @yield('content')
         </div>
     @endguest
