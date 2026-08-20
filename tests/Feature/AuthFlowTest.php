@@ -37,15 +37,15 @@ class AuthFlowTest extends TestCase
     {
         $user = User::where('email', 'test@example.com')->first();
 
-        $this->actingAs($user)->get('/login')->assertRedirect('/staff');
+        $this->actingAs($user)->get('/login')->assertRedirect('/');
     }
 
-    public function test_login_success_redirects_to_staff(): void
+    public function test_login_success_redirects_to_dashboard(): void
     {
         $this->post('/login', [
             'email' => 'test@example.com',
             'password' => 'password123',
-        ])->assertRedirect('/staff');
+        ])->assertRedirect('/');
 
         $this->assertAuthenticated();
     }
