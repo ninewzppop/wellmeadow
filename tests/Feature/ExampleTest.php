@@ -14,7 +14,7 @@ class ExampleTest extends TestCase
     /**
      * A basic test example.
      */
-    public function test_the_application_redirects_home_to_the_staff_list(): void
+    public function test_the_application_home_loads_the_dashboard(): void
     {
         $this->actingAs(User::create([
             'name' => 'Test User',
@@ -24,6 +24,6 @@ class ExampleTest extends TestCase
 
         $response = $this->get('/');
 
-        $response->assertRedirect('/staff');
+        $response->assertOk()->assertSee('Dashboard');
     }
 }

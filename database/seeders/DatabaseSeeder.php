@@ -12,10 +12,15 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            ['name' => 'Test Admin', 'password' => 'password', 'role' => 'admin'],
+        );
+
+        User::firstOrCreate(
+            ['email' => 'test@example.com'],
+            ['name' => 'Test User', 'password' => 'password', 'role' => 'staff'],
+        );
 
         $this->call([
             PosSeeder::class,

@@ -3,47 +3,73 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Hospital Staff') &middot; Hospital</title>
+    <title>@yield('title', 'Dashboard') &middot; Hospital</title>
     @vite('resources/css/app.css')
 </head>
 <body class="h-full font-sans text-slate-800 antialiased">
-    <nav class="bg-sky-800 text-white shadow">
-        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <a href="{{ route('staff.index') }}" class="text-lg font-bold">Hospital Staff System</a>
-            <div class="flex gap-4 text-sm font-medium">
-                <a href="{{ route('staff.index') }}" class="hover:text-sky-200">Staff</a>
-                <a href="{{ route('staff.search') }}" class="hover:text-sky-200">Search</a>
-                <a href="{{ route('allocations.index') }}" class="hover:text-sky-200">Allocations</a>
-                <a href="{{ route('wards.report') }}" class="hover:text-sky-200">Ward Report</a>
-                @auth
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
+    @auth
+        <div class="flex min-h-full">
+            @include('layouts.sidebar')
+
+            <div class="flex min-w-0 flex-1 flex-col">
+                <header class="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-6">
+                    <button type="button" data-sidebar-toggle
+                        class="rounded p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
+                        aria-label="Toggle navigation">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-6 w-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
+                    <div class="text-sm font-medium text-slate-500">
+                        {{ auth()->user()->name }}
+                        <span class="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">
+                            {{ ucfirst(auth()->user()->role) }}
+                        </span>
+                    </div>
+                    <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="hover:text-sky-200">Logout</button>
+                        <button type="submit" class="rounded bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
+                            Logout
+                        </button>
                     </form>
-                @endauth
+                </header>
+
+                <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+                    @if (session('status'))
+                        <div class="mb-4 rounded border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800">
+                            {{ session('status') }}
+                        </div>
+                    @endif
+
+                    @if ($errors->any())
+                        <div class="mb-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
+                            <strong>Please fix the following errors:</strong>
+                            <ul class="mt-1 list-inside list-disc">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @yield('content')
+                </main>
             </div>
         </div>
-    </nav>
+    @endauth
 
-    <main class="mx-auto max-w-6xl px-4 py-8">
-        @if (session('status'))
-            <div class="mb-4 rounded border border-green-300 bg-green-50 px-4 py-3 text-sm text-green-800">
-                {{ session('status') }}
-            </div>
-        @endif
+    @guest
+        <div class="mx-auto max-w-4xl px-4 py-10">
+            @yield('content')
+        </div>
+    @endguest
 
-        @if ($errors->any())
-            <div class="mb-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
-                <strong>Please fix the following errors:</strong>
-                <ul class="mt-1 list-inside list-disc">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+    @stack('scripts')
 
-        @yield('content')
-    </main>
+    <script>
+        document.querySelector('[data-sidebar-toggle]')?.addEventListener('click', () => {
+            document.querySelector('[data-sidebar]')?.classList.toggle('-translate-x-full');
+        });
+    </script>
 </body>
 </html>
