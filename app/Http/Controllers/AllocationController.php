@@ -40,7 +40,7 @@ class AllocationController extends Controller
         ]);
 
         return redirect()->route('allocations.index')
-            ->with('status', 'Allocation recorded.');
+            ->with('status', __('Allocation recorded.'));
     }
 
     public function destroy(StfRota $allocation): RedirectResponse
@@ -48,6 +48,6 @@ class AllocationController extends Controller
         $allocation->delete();
 
         return redirect()->route('allocations.index')
-            ->with('status', 'Allocation removed.');
+            ->with('status', __('Allocation removed.'));
     }
 }

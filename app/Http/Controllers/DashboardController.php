@@ -49,9 +49,9 @@ class DashboardController extends Controller
             'appointmentsToday' => Appointment::whereDate('ApptDate', $today)->count(),
             'appointmentsWeek' => $appointmentsWeek,
             'appointmentStatusLabels' => [
-                'waiting list' => 'รอ (Waiting list)',
-                'completed' => 'เสร็จสิ้น',
-                'cancelled' => 'ยกเลิก',
+                'waiting list' => __('Waiting list'),
+                'completed' => __('Completed'),
+                'cancelled' => __('Cancelled'),
             ],
             'bedOccupancy' => $totalBeds > 0 ? round($occupiedBeds / $totalBeds * 100, 1) : 0,
             'occupiedBeds' => $occupiedBeds,
@@ -77,6 +77,8 @@ class DashboardController extends Controller
                 'trendDays' => $trendDays->map(fn (string $date) => Carbon::parse($date)->format('d/m'))->values(),
                 'patientTrend' => $trendDays->map(fn (string $date) => $patientsByDate[$date] ?? 0)->values(),
                 'appointmentTrend' => $trendDays->map(fn (string $date) => $appointmentsByDate[$date] ?? 0)->values(),
+                'patientLabel' => __('New patients'),
+                'appointmentLabel' => __('Appointments'),
             ],
         ]);
     }
