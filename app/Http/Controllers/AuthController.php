@@ -29,7 +29,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('staff.index'));
+        return redirect()->intended(route('dashboard.index'));
     }
 
     public function logout(Request $request): RedirectResponse
