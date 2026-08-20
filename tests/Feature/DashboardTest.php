@@ -32,7 +32,7 @@ class DashboardTest extends TestCase
         $this->get('/')
             ->assertOk()
             ->assertSee('Dashboard')
-            ->assertSee('ผู้ป่วยทั้งหมด');
+            ->assertSee('Total patients');
     }
 
     public function test_dashboard_shows_real_counts(): void
