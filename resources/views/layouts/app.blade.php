@@ -12,7 +12,7 @@
             @include('layouts.sidebar')
 
             <div class="flex min-w-0 flex-1 flex-col">
-                <header class="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 shadow-sm sm:px-6">
+                <header class="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-2.5 shadow-sm sm:px-6">
                     <button type="button" data-sidebar-toggle
                         class="rounded p-2 text-slate-500 hover:bg-slate-100 lg:hidden"
                         aria-label="Toggle navigation">
@@ -20,18 +20,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                         </svg>
                     </button>
-                    <div class="text-sm font-medium text-slate-500">
-                        {{ auth()->user()->name }}
-                        <span class="ml-2 rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">
-                            {{ ucfirst(auth()->user()->role) }}
-                        </span>
-                    </div>
-                    <form method="POST" action="{{ route('logout') }}">
-                        @csrf
-                        <button type="submit" class="rounded bg-slate-100 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
-                            Logout
-                        </button>
-                    </form>
+
+                    <x-user-dropdown />
                 </header>
 
                 <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
