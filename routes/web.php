@@ -3,11 +3,14 @@
 use App\Http\Controllers\AllocationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\PlaceholderController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffSearchController;
 use App\Http\Controllers\WardReportController;
 use Illuminate\Support\Facades\Route;
+
+Route::get('language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [AuthController::class, 'showLoginForm'])->name('login');
