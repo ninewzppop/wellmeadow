@@ -21,7 +21,9 @@
                         </svg>
                     </button>
 
-                    <x-user-dropdown />
+                    <div class="ml-auto">
+                        <x-user-dropdown />
+                    </div>
                 </header>
 
                 <main class="flex-1 px-4 py-6 sm:px-6 lg:px-8">
