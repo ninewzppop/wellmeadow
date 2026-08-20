@@ -9,7 +9,7 @@
         </button>
     </div>
 
-    <nav class="flex-1 space-y-6 overflow-y-auto px-3 pb-6 text-sm">
+    <nav class="no-scrollbar flex-1 space-y-6 overflow-y-auto px-3 pb-6 text-sm">
         <ul class="space-y-1">
             <li>
                 <a href="{{ route('dashboard.index') }}"
