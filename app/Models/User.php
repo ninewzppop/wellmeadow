@@ -34,4 +34,31 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
+
+    /**
+     * Avatar initials derived from the name, falling back to the email.
+     * Two words -> first letters; single word -> first character; empty name -> first email character.
+     */
+    public function getInitialsAttribute(): string
+    {
+        $source = trim((string) $this->name);
+
+        if ($source === '') {
+            $source = trim((string) $this->email);
+        }
+
+        $words = preg_split('/\s+/u', $source, -1, PREG_SPLIT_NO_EMPTY);
+
+        if (empty($words)) {
+            return '?';
+        }
+
+        $initials = mb_strtoupper(mb_substr($words[0], 0, 1));
+
+        if (count($words) > 1) {
+            $initials .= mb_strtoupper(mb_substr($words[1], 0, 1));
+        }
+
+        return $initials;
+    }
 }
