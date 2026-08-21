@@ -12,7 +12,7 @@
     @endphp
 
     <div class="mb-6">
-        <h1 class="text-2xl font-bold text-slate-900">{{ $editing ? __('Edit staff member') : __('New staff member') }}</h1>
+        <h1 class="text-2xl font-bold text-[#112D6E]">{{ $editing ? __('Edit staff member') : __('New staff member') }}</h1>
     </div>
 
     <form method="POST"

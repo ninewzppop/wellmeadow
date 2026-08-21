@@ -4,7 +4,7 @@
 
 @section('content')
     <div class="mb-6 flex items-center justify-between">
-        <h1 class="text-2xl font-bold text-slate-900">{{ __('Staff') }}</h1>
+        <h1 class="text-2xl font-bold text-[#112D6E]">{{ __('Staff') }}</h1>
         <div class="flex gap-3">
             <a href="{{ route('staff.search') }}"
                class="rounded bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200">
