@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bed;
+use App\Models\Stf;
 use App\Models\Wd;
 use Illuminate\View\View;
 
@@ -27,13 +28,17 @@ class WardController extends Controller
 
         $available = $beds->where('BedStatus', 'Available')->count();
         $occupied = $beds->where('BedStatus', 'Occupied')->count();
+        $staff = Stf::where('Alloc_Wd_No', $ward->Wd_No)
+            ->orderBy('LastName')
+            ->get(['Stf_No', 'FirstName', 'LastName']);
+ 
 
         return view('wards.show', [
             'ward'      => $ward,
             'beds'      => $beds,
             'available' => $available,
             'occupied'  => $occupied,
-            //'staff'     => $staffQuery, // ต้อง query เพิ่ม
+            'staff'     => $staff,
             ]);
     }
 }
