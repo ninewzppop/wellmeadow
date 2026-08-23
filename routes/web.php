@@ -1,9 +1,12 @@
 <?php
 
 use App\Http\Controllers\AllocationController;
+use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InPatientController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PlaceholderController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffSearchController;
@@ -33,9 +36,9 @@ Route::middleware('auth')->group(function () {
     Route::get('wards/{ward}', [WardController::class, 'show'])->name('wards.show');
 
     // Placeholder routes for pages that will be built later (menu wiring only).
-    Route::get('/patients', [PlaceholderController::class, 'show'])->defaults('page', 'patients')->name('patients.index');
-    Route::get('/appointments', [PlaceholderController::class, 'show'])->defaults('page', 'appointments')->name('appointments.index');
-    Route::get('/in-patients', [PlaceholderController::class, 'show'])->defaults('page', 'in-patients')->name('in-patients.index');
+    Route::resource('patients', PatientController::class);
+    Route::resource('appointments', AppointmentController::class);
+    Route::resource('in-patients', InPatientController::class);
     Route::get('/medications', [PlaceholderController::class, 'show'])->defaults('page', 'medications')->name('medications.index');
     Route::get('/allergies', [PlaceholderController::class, 'show'])->defaults('page', 'allergies')->name('allergies.index');
     Route::get('/rooms', [PlaceholderController::class, 'show'])->defaults('page', 'rooms')->name('rooms.index');
