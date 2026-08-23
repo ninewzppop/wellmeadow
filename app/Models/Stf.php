@@ -58,4 +58,9 @@ class Stf extends Model
     {
         return $this->hasMany(StfRota::class, 'Stf_No', 'Stf_No');
     }
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'Consult_Stf_No', 'Stf_No');
+    }
 }
