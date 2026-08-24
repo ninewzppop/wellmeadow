@@ -121,13 +121,46 @@ class StaffTest extends TestCase
         Stf::create(['Stf_No' => 'S2006', 'FirstName' => 'Shift', 'LastName' => 'Worker']);
         Wd::create(['Wd_No' => 'WD98', 'Wd_Name' => 'Another Ward', 'Location' => 'Block Y', 'TotalBeds' => 8, 'TelExtension' => '8888']);
 
-        $this->post('/allocations', [
+        $this->post('/rota', [
             'Stf_No' => 'S2006',
             'Wd_No' => 'WD98',
             'WkBegin' => '2026-08-20',
             'Shift' => 'Morning',
-        ])->assertRedirect('/allocations');
+        ])->assertRedirect('/rota');
 
         $this->assertDatabaseHas('StfRota', ['Stf_No' => 'S2006', 'Wd_No' => 'WD98', 'Shift' => 'Morning']);
+    }
+
+    public function test_conflicting_allocation_is_blocked(): void
+    {
+        Stf::create(['Stf_No' => 'S2007', 'FirstName' => 'Double', 'LastName' => 'Booked']);
+        Wd::create(['Wd_No' => 'WD97', 'Wd_Name' => 'Ward A', 'TotalBeds' => 5]);
+        Wd::create(['Wd_No' => 'WD96', 'Wd_Name' => 'Ward B', 'TotalBeds' => 5]);
+        StfRota::create(['StfRota_No' => 'R1', 'Stf_No' => 'S2007', 'Wd_No' => 'WD97', 'WkBegin' => '2026-08-17', 'Shift' => 'Night']);
+
+        $this->post('/rota', [
+            'Stf_No' => 'S2007',
+            'Wd_No' => 'WD96',
+            'WkBegin' => '2026-08-17',
+            'Shift' => 'Morning',
+        ]);
+
+        $this->assertDatabaseMissing('StfRota', ['Stf_No' => 'S2007', 'Wd_No' => 'WD96']);
+    }
+
+    public function test_rota_entry_can_be_updated(): void
+    {
+        Stf::create(['Stf_No' => 'S2008', 'FirstName' => 'Updat', 'LastName' => 'able']);
+        Wd::create(['Wd_No' => 'WD95', 'Wd_Name' => 'Ward C', 'TotalBeds' => 5]);
+        StfRota::create(['StfRota_No' => 'R1', 'Stf_No' => 'S2008', 'Wd_No' => 'WD95', 'WkBegin' => '2026-08-17', 'Shift' => 'Night']);
+
+        $this->put('/rota/R1', [
+            'Stf_No' => 'S2008',
+            'Wd_No' => 'WD95',
+            'WkBegin' => '2026-08-24',
+            'Shift' => 'Evening',
+        ])->assertRedirect('/rota');
+
+        $this->assertDatabaseHas('StfRota', ['StfRota_No' => 'R1', 'WkBegin' => '2026-08-24', 'Shift' => 'Evening']);
     }
 }

@@ -75,8 +75,12 @@
                                 &#128100;
                             </div>
                             <div>
-                                <p class="text-sm font-semibold text-slate-800">{{ $member->Name }}</p>
-                                <p class="text-xs text-slate-500">{{ $member->Role }}</p>
+                                <p class="text-sm font-semibold text-slate-800">
+                                    {{ $member->FirstName }} {{ $member->LastName }}
+                                </p>
+                                <p class="text-xs text-slate-500">
+                                    {{ $member->Stf_No }}
+                                </p>
                             </div>
                         </div>
                     @endforeach
