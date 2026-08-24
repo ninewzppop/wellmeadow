@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\AllocationController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -8,6 +7,7 @@ use App\Http\Controllers\InPatientController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PlaceholderController;
+use App\Http\Controllers\RotaController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffSearchController;
 use App\Http\Controllers\WardController;
@@ -29,8 +29,6 @@ Route::middleware('auth')->group(function () {
     Route::resource('staff', StaffController::class)->except(['show']);
     Route::get('staff/search', [StaffSearchController::class, 'search'])->name('staff.search');
 
-    Route::resource('allocations', AllocationController::class)->only(['index', 'store', 'destroy']);
-
     Route::get('wards', [WardController::class, 'index'])->name('wards.index');
     Route::get('wards/report', [WardReportController::class, 'show'])->name('wards.report');
     Route::get('wards/{ward}', [WardController::class, 'show'])->name('wards.show');
@@ -45,7 +43,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/stock', [PlaceholderController::class, 'show'])->defaults('page', 'stock')->name('stock.index');
     Route::get('/pharmacy', [PlaceholderController::class, 'show'])->defaults('page', 'pharmacy')->name('pharmacy.index');
     Route::get('/requisitions', [PlaceholderController::class, 'show'])->defaults('page', 'requisitions')->name('requisitions.index');
-    Route::get('/rota', [PlaceholderController::class, 'show'])->defaults('page', 'rota')->name('rota.index');
+    Route::get('/rota', [RotaController::class, 'index'])->name('rota.index');
+    Route::post('/rota', [RotaController::class, 'store'])->name('rota.store');
+    Route::put('/rota/{allocation}', [RotaController::class, 'update'])->name('rota.update');
+    Route::delete('/rota/{allocation}', [RotaController::class, 'destroy'])->name('rota.destroy');
+    Route::redirect('/allocations', '/rota');
     Route::get('/suppliers', [PlaceholderController::class, 'show'])->defaults('page', 'suppliers')->name('suppliers.index');
     Route::get('/local-doctors', [PlaceholderController::class, 'show'])->defaults('page', 'local-doctors')->name('local-doctors.index');
 
