@@ -17,6 +17,11 @@ class LocalDr extends Model
 
     public $timestamps = false;
 
+    public function getRouteKeyName(): string
+    {
+        return 'Clinic_No';
+    }
+
     protected $fillable = [
         'Clinic_No', 'FirstName', 'LastName', 'Address', 'TelNo',
     ];
