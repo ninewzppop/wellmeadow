@@ -31,7 +31,6 @@ class AllergyTest extends TestCase
         $staff = Stf::create(['Stf_No' => 'S1001', 'FirstName' => 'Nurse', 'LastName' => 'Joy']);
 
         $response = $this->post('/allergies', [
-            'Allergy_No' => 'AL01',
             'Pt_No' => $patient->Pt_No,
             'Drug_No' => $drug->Drug_No,
             'Allergy_Name' => 'Penicillin',
@@ -44,7 +43,6 @@ class AllergyTest extends TestCase
         $response->assertRedirect('/allergies');
 
         $this->assertDatabaseHas('PatientAllergy', [
-            'Allergy_No' => 'AL01',
             'Pt_No' => 'PT001',
             'Drug_No' => 'DR01',
             'Reaction' => 'Rash',

@@ -150,6 +150,7 @@ class AllergyController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateAllergy($request);
+        $data['Allergy_No'] = $this->generateId('PatientAllergy', 'Allergy_No', 'AL');
 
         PatientAllergy::create($data);
 
@@ -170,7 +171,7 @@ class AllergyController extends Controller
 
     public function update(Request $request, PatientAllergy $allergy): RedirectResponse
     {
-        $data = $this->validateAllergy($request, $allergy->Allergy_No);
+        $data = $this->validateAllergy($request);
 
         $allergy->update($data);
 
@@ -188,15 +189,9 @@ class AllergyController extends Controller
             ->with('status', __('Deleted allergy record :no.', ['no' => $no]));
     }
 
-    protected function validateAllergy(Request $request, ?string $ignoreAllergyNo = null): array
+    protected function validateAllergy(Request $request): array
     {
         return $request->validate([
-            'Allergy_No' => [
-                'required',
-                'string',
-                'max:10',
-                $ignoreAllergyNo ? 'unique:PatientAllergy,Allergy_No,'.$ignoreAllergyNo.',Allergy_No' : 'unique:PatientAllergy,Allergy_No',
-            ],
             'Pt_No' => ['nullable', 'exists:Patient,Pt_No'],
             'Drug_No' => ['nullable', 'exists:Pharmaceutical,Drug_No'],
             'Allergy_Name' => ['nullable', 'string', 'max:100'],

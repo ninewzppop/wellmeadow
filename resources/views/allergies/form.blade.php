@@ -5,9 +5,14 @@
 @section('content')
 <div class="mx-auto max-w-4xl">
     <div class="rounded-2xl bg-white p-8 shadow-sm">
-        <h1 class="mb-6 text-2xl font-bold text-slate-900">
+        <h1 class="mb-1 text-2xl font-bold text-slate-900">
             {{ $allergy->exists ? __('Edit Allergy Record') : __('New Allergy Record') }}
         </h1>
+        @if ($allergy->exists)
+            <p class="mb-6 text-sm text-slate-500">{{ __('Allergy No.') }}: <span class="font-semibold text-slate-700">{{ $allergy->Allergy_No }}</span></p>
+        @else
+            <p class="mb-6 text-sm text-slate-500">{{ __('The allergy number is generated automatically.') }}</p>
+        @endif
 
         <form method="POST" action="{{ $allergy->exists ? route('allergies.update', $allergy) : route('allergies.store') }}">
             @csrf
@@ -31,21 +36,6 @@
                     {{ __('Record Information') }}
                 </h2>
                 <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">
-                            {{ __('Allergy No.') }} <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="Allergy_No" value="{{ old('Allergy_No', $allergy->Allergy_No) }}" maxlength="10"
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none"
-                               required @if($allergy->exists) readonly @endif>
-                        @if($allergy->exists)
-                            <p class="mt-1.5 text-xs text-slate-400">{{ __('Cannot be changed after creation') }}</p>
-                        @endif
-                        @error('Allergy_No')
-                            <p class="mt-1.5 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
                     <div>
                         <label class="mb-1.5 block text-sm font-medium text-slate-700">
                             {{ __('Diagnosed Date') }} <span class="text-red-500">*</span>
