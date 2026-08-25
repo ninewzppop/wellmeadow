@@ -92,3 +92,47 @@ Added 2026-08-20 (ADR-0002).
 | Account | `users` table (existing) | Insert 1 test row (tinker + `Hash::make`) only |
 | Auth state | `sessions` table (existing, standard Laravel) | created on login, regenerated + flushed on logout |
 | Schema | — | none — no new tables, no migration edits |
+
+---
+
+# Allergies page — grouped read model
+
+Added 2026-08-25 (ADR-0003).
+
+Purely a **read-model** change over the existing entities — no new entities,
+tables or columns. "Group" is not an entity; it is a presentation-time
+grouping of `PatientAllergy` rows by `Pt_No`.
+
+## Entities involved (all existing)
+
+| Entity | Role in this feature |
+|---|---|
+| Patient | Group key; name A–Z ordering via `LastName`, `FirstName` |
+| PatientAllergy | Rows inside a group; ordered `DiagDate desc`, `Allergy_No asc`; `Pt_No` nullable → "No Patient" group last |
+| Pharmaceutical / Stf | Eager-loaded for allergen and recorded-by display |
+
+## Value objects
+
+- **View mode**: `grouped` (default) or `flat`, carried by query parameter
+  `view`; invalid values fall back to `grouped`.
+- **Allergy count**: computed value per group = number of filtered records
+  displayed for that patient (never stored).
+
+## Invariants
+
+- A patient's group never spans two pages in grouped mode (pagination is
+  per group, 10 groups/page).
+- Badge counts always equal the number of visible rows for that group.
+- Dropdown counts always equal the patient's total `PatientAllergy` rows,
+  independent of search/severity filters.
+- Every `PatientAllergy` row appears in exactly one group per page-set;
+  NULL `Pt_No` rows appear only in the trailing "No Patient" group.
+
+## Persistence map
+
+| Concern | Storage/Query | Notes |
+|---|---|---|
+| Grouped listing | `PatientAllergy::with(['patient','drug','recordedBy'])` + filters, grouped in PHP | manual `LengthAwarePaginator` over groups |
+| Flat listing | same base query, existing 15/page paginator | unchanged behaviour |
+| Dropdown totals | single grouped count query (`GROUP BY Pt_No`) | independent of other filters |
+| Schema | — | none — read-only over existing tables |

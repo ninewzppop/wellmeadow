@@ -6,19 +6,107 @@ use App\Models\Patient;
 use App\Models\PatientAllergy;
 use App\Models\Pharmaceutical;
 use App\Models\Stf;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class AllergyController extends Controller
 {
     public const SEVERITIES = ['Mild', 'Moderate', 'Severe'];
 
+    private const GROUPS_PER_PAGE = 10;
+
     public function index(Request $request): View
     {
-        $query = PatientAllergy::with(['patient', 'drug', 'recordedBy'])
+        $viewMode = $request->query('view', 'grouped');
+        if (! in_array($viewMode, ['grouped', 'flat'], true)) {
+            $viewMode = 'grouped';
+        }
+
+        $data = array_merge([
+            'patients' => Patient::orderBy('LastName')->orderBy('FirstName')->get(),
+            'allergyTotals' => $this->allergyTotalsPerPatient(),
+            'severities' => self::SEVERITIES,
+            'viewMode' => $viewMode,
+        ], $viewMode === 'flat' ? $this->flatListing($request) : $this->groupedListing($request));
+
+        return view('allergies.index', $data);
+    }
+
+    private function flatListing(Request $request): array
+    {
+        return [
+            'allergies' => $this->filteredAllergies($request)
+                ->orderBy('DiagDate', 'desc')
+                ->orderBy('Allergy_No')
+                ->paginate(15)
+                ->withQueryString(),
+            'patientGroups' => null,
+        ];
+    }
+
+    private function groupedListing(Request $request): array
+    {
+        $records = $this->filteredAllergies($request)
             ->orderBy('DiagDate', 'desc')
-            ->orderBy('Allergy_No');
+            ->orderBy('Allergy_No')
+            ->get();
+
+        $groups = $records
+            ->groupBy(fn (PatientAllergy $allergy) => $allergy->Pt_No ?? '')
+            ->map(fn (Collection $rows) => [
+                'patient' => $rows->first()->patient,
+                'allergies' => $rows->values(),
+                'count' => $rows->count(),
+                'hasSevere' => $rows->contains(fn (PatientAllergy $row) => $row->Severity === 'Severe'),
+            ])
+            ->values()
+            ->sort(function (array $a, array $b) {
+                if ((! $a['patient']) xor (! $b['patient'])) {
+                    return $a['patient'] ? -1 : 1;
+                }
+
+                if ($a['patient'] && $b['patient']) {
+                    return [$a['patient']->LastName, $a['patient']->FirstName]
+                        <=> [$b['patient']->LastName, $b['patient']->FirstName];
+                }
+
+                return 0;
+            })
+            ->values();
+
+        $page = LengthAwarePaginator::resolveCurrentPage();
+
+        $patientGroups = new LengthAwarePaginator(
+            $groups->slice(($page - 1) * self::GROUPS_PER_PAGE, self::GROUPS_PER_PAGE)->values(),
+            $groups->count(),
+            self::GROUPS_PER_PAGE,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath()],
+        );
+        $patientGroups->withQueryString();
+
+        return [
+            'allergies' => null,
+            'patientGroups' => $patientGroups,
+        ];
+    }
+
+    private function allergyTotalsPerPatient(): Collection
+    {
+        return PatientAllergy::query()
+            ->whereNotNull('Pt_No')
+            ->selectRaw('Pt_No, COUNT(*) as total')
+            ->groupBy('Pt_No')
+            ->pluck('total', 'Pt_No');
+    }
+
+    private function filteredAllergies(Request $request): Builder
+    {
+        $query = PatientAllergy::with(['patient', 'drug', 'recordedBy']);
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -45,15 +133,7 @@ class AllergyController extends Controller
             $query->where('Pt_No', $request->patient);
         }
 
-        $allergies = $query->paginate(15)->withQueryString();
-
-        $patients = Patient::orderBy('LastName')->orderBy('FirstName')->get();
-
-        return view('allergies.index', [
-            'allergies' => $allergies,
-            'patients' => $patients,
-            'severities' => self::SEVERITIES,
-        ]);
+        return $query;
     }
 
     public function create(): View

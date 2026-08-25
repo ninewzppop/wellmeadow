@@ -29,3 +29,8 @@
 | Logout | `Auth::logout()` + session regeneration + redirect to `/login`. |
 | Guest | State where no authenticated `User` session exists; visiting `/login` while already logged in redirects to `staff.index`. |
 | Test user | Seed row in `users`: name `Test User`, email `test@example.com`, password `password123` (hashed with `Hash::make`). Used to verify login. |
+| Grouped view | Default allergies listing mode (`view=grouped`): records merged under one rowspan patient cell per patient, paginated per patient (10/page), ordered patient A–Z. |
+| Flat view | Record-level allergies listing mode (`view=flat`): 1 row = 1 record, 15/page — used for editing/deleting individual records. |
+| View mode | Query parameter `view` with value `grouped` or `flat`; anything else falls back to `grouped`. Preserved across filter submissions and pagination links. |
+| No Patient group | Trailing group in grouped view holding allergy records whose `Pt_No` is NULL. |
+| Allergy count | Number of filtered `PatientAllergy` rows displayed for a patient in grouped view (badge "(N allergies)"); dropdown counts instead show the unfiltered lifetime total. |
