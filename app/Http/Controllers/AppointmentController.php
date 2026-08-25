@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\Outpatient;
 use App\Models\Patient;
 use App\Models\Room;
 use App\Models\Stf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -131,7 +133,13 @@ class AppointmentController extends Controller
     {
         $no = $appointment->Appt_No;
 
-        $appointment->delete();
+        DB::transaction(function () use ($appointment) {
+            // Outpatient is a 1:1 extension of the appointment (FK without
+            // cascade); remove it so the appointment itself can be deleted.
+            Outpatient::where('Appt_out_No', $appointment->Appt_No)->delete();
+
+            $appointment->delete();
+        });
 
         return redirect()->route('appointments.index')
             ->with('status', __('Deleted appointment :no.', ['no' => $no]));
