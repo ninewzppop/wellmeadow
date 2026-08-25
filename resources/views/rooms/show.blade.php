@@ -92,7 +92,7 @@
                                 <td class="px-5 py-4 text-slate-600">{{ $appt->consultant?->full_name ?? '—' }}</td>
                                 <td class="px-5 py-4">
                                     @if ($isBusyNow)
-                                        <span class="mr-1.5 inline-flex h-2 w-2">
+                                        <span class="relative mr-1.5 inline-flex h-2 w-2">
                                             <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75"></span>
                                             <span class="relative inline-flex h-2 w-2 rounded-full bg-amber-600"></span>
                                         </span>
@@ -102,15 +102,22 @@
                                 <td class="px-5 py-4">
                                     <div class="flex flex-wrap items-center justify-end gap-2">
                                         @if ($appt->status === 'waiting list' || $appt->status === 'scheduled')
-                                            <form method="POST" action="{{ route('rooms.start', [$room, $appt]) }}">
-                                                @csrf
-                                                <input type="hidden" name="date" value="{{ $date->toDateString() }}">
-                                                <button type="submit" @disabled($startBlocked)
-                                                        title="{{ $startBlocked ? __('Another patient is currently in consultation in this room. Complete that visit first.') : __('Start consultation') }}"
-                                                        class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white enabled:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40">
-                                                    {{ __('Start consultation') }}
-                                                </button>
-                                            </form>
+                                            <div class="flex flex-col items-end gap-1">
+                                                <form method="POST" action="{{ route('rooms.start', [$room, $appt]) }}">
+                                                    @csrf
+                                                    <input type="hidden" name="date" value="{{ $date->toDateString() }}">
+                                                    <button type="submit" @disabled($startBlocked)
+                                                            title="{{ $startBlocked ? __('Another patient is currently in consultation in this room. Complete that visit first.') : __('Start consultation') }}"
+                                                            class="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white enabled:hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-40">
+                                                        {{ __('Start consultation') }}
+                                                    </button>
+                                                </form>
+                                                @if ($startBlocked)
+                                                    <span class="max-w-[180px] text-right text-[10px] leading-tight font-medium text-amber-600">
+                                                        {{ __('Complete the current consultation first.') }}
+                                                    </span>
+                                                @endif
+                                            </div>
                                         @elseif ($isBusyNow)
                                             <button type="button"
                                                     onclick="document.getElementById('med-modal-{{ $appt->Appt_No }}').showModal()"

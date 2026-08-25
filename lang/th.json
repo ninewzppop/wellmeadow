@@ -226,6 +226,7 @@
     "Finished today": "จบแล้ววันนี้",
     "Outcome": "ผลการตรวจ",
     "Another patient is currently in consultation in this room. Complete that visit first.": "มีผู้ป่วยกำลังถูกตรวจในห้องนี้อยู่ กรุณาจบการตรวจรายการนั้นก่อน",
+    "Complete the current consultation first.": "กรุณาจบการตรวจรายการที่กำลังตรวจอยู่ก่อน",
     "This appointment has no linked patient.": "นัดหมายนี้ไม่ได้ผูกกับผู้ป่วย",
     "Close": "ปิด",
     "Allergy warning": "คำเตือน: ประวัติแพ้ยา",
