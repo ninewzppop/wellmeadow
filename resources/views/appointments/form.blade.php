@@ -40,14 +40,20 @@
                         <label class="mb-1 block text-sm font-medium text-slate-700">
                             {{ __('Patient') }} <span class="text-red-500">*</span>
                         </label>
-                        <select name="Pt_No" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" required>
-                            <option value="">{{ __('Select Patient') }}</option>
-                            @foreach ($patients as $patient)
-                                <option value="{{ $patient->Pt_No }}" {{ old('Pt_No', $appointment->Pt_No) == $patient->Pt_No ? 'selected' : '' }}>
-                                    {{ $patient->full_name }} ({{ $patient->Pt_No }})
-                                </option>
-                            @endforeach
-                        </select>
+                        @php
+                            $selectedPtNo = old('Pt_No', $appointment->Pt_No);
+                            $selectedPatient = $selectedPtNo ? $patients->firstWhere('Pt_No', $selectedPtNo) : null;
+                        @endphp
+                        <input type="hidden" name="Pt_No" value="{{ $selectedPtNo }}">
+                        <div class="relative">
+                            <input type="text" id="patient-search" autocomplete="off"
+                                   value="{{ $selectedPatient?->full_name ? $selectedPatient->full_name.' ('.$selectedPatient->Pt_No.')' : '' }}"
+                                   placeholder="{{ __('Type patient name or ID...') }}"
+                                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                            <div id="patient-list"
+                                 class="absolute z-20 mt-1 hidden max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"></div>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-400">{{ __('Type to search by name or patient ID.') }}</p>
                         @error('Pt_No')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
@@ -161,3 +167,62 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+    <script>
+        (function () {
+            var patients = @json($patients->map(fn ($p) => ['id' => $p->Pt_No, 'label' => $p->full_name.' ('.$p->Pt_No.')']));
+            var input = document.getElementById('patient-search');
+            var list = document.getElementById('patient-list');
+            var hidden = document.querySelector('input[name="Pt_No"]');
+            if (!input || !list || !hidden) {
+                return;
+            }
+
+            function render(query) {
+                query = query.trim().toLowerCase();
+                var matches = patients.filter(function (p) {
+                    return p.label.toLowerCase().indexOf(query) !== -1;
+                }).slice(0, 50);
+
+                list.innerHTML = '';
+
+                if (!matches.length) {
+                    var empty = document.createElement('div');
+                    empty.className = 'px-3 py-2 text-sm text-slate-400';
+                    empty.textContent = @json(__('No matching patient.'));
+                    list.appendChild(empty);
+                }
+
+                matches.forEach(function (p) {
+                    var option = document.createElement('button');
+                    option.type = 'button';
+                    option.className = 'block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100';
+                    option.textContent = p.label;
+                    option.addEventListener('mousedown', function (e) {
+                        e.preventDefault();
+                        hidden.value = p.id;
+                        input.value = p.label;
+                        list.classList.add('hidden');
+                    });
+                    list.appendChild(option);
+                });
+
+                list.classList.remove('hidden');
+            }
+
+            input.addEventListener('focus', function () {
+                render(input.value);
+            });
+            input.addEventListener('input', function () {
+                hidden.value = '';
+                render(input.value);
+            });
+            input.addEventListener('blur', function () {
+                setTimeout(function () {
+                    list.classList.add('hidden');
+                }, 120);
+            });
+        })();
+    </script>
+@endpush
