@@ -194,7 +194,6 @@ class AllergyController extends Controller
         return $request->validate([
             'Pt_No' => ['nullable', 'exists:Patient,Pt_No'],
             'Drug_No' => ['nullable', 'exists:Pharmaceutical,Drug_No'],
-            'Allergy_Name' => ['nullable', 'string', 'max:100'],
             'Reaction' => ['required', 'string', 'max:150'],
             'Severity' => ['required', 'string', 'max:15', 'in:'.implode(',', self::SEVERITIES)],
             'DiagDate' => ['required', 'date'],

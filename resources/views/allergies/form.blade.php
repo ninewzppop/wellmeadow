@@ -85,19 +85,8 @@
                     {{ __('Allergy Details') }}
                 </h2>
                 <div class="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2">
-                    <div>
+                    <div class="sm:col-span-2">
                         <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Allergen') }}</label>
-                        <input type="text" name="Allergy_Name" value="{{ old('Allergy_Name', $allergy->Allergy_Name) }}" maxlength="100"
-                               placeholder="{{ __('e.g. Penicillin') }}"
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none">
-                        <p class="mt-1.5 text-xs text-slate-400">{{ __('Or link a specific drug from stock instead →') }}</p>
-                        @error('Allergy_Name')
-                            <p class="mt-1.5 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="mb-1.5 block text-sm font-medium text-slate-700">{{ __('Linked Drug') }}</label>
                         <select name="Drug_No" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none">
                             <option value="">{{ __('— none —') }}</option>
                             @foreach ($drugs as $drug)
@@ -106,7 +95,7 @@
                                 </option>
                             @endforeach
                         </select>
-                        <p class="mt-1.5 text-xs text-slate-400">{{ __('From the Pharmaceutical supplies list') }}</p>
+                        <p class="mt-1.5 text-xs text-slate-400">{{ __('The allergen name follows the selected drug.') }}</p>
                         @error('Drug_No')
                             <p class="mt-1.5 text-sm text-red-500">{{ $message }}</p>
                         @enderror

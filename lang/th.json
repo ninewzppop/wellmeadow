@@ -257,6 +257,7 @@
 
     "The appointment number is generated automatically — just pick and save.": "ระบบจะสร้างเลขที่นัดหมายให้อัตโนมัติ — เพียงเลือกข้อมูลแล้วกดบันทึก",
     "The allergy number is generated automatically.": "ระบบจะสร้างเลขที่บันทึกการแพ้ยาให้อัตโนมัติ",
+    "The allergen name follows the selected drug.": "ชื่อสารก่อภูมิแพ้จะเป็นชื่อยาตามที่เลือก",
     "Managed from the room queue page.": "สถานะนี้จัดการจากหน้าคิวของห้องตรวจ",
     "Open queue": "เปิดคิว",
     "Add to queue": "เพิ่มเข้าคิว"

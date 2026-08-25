@@ -33,7 +33,6 @@ class AllergyTest extends TestCase
         $response = $this->post('/allergies', [
             'Pt_No' => $patient->Pt_No,
             'Drug_No' => $drug->Drug_No,
-            'Allergy_Name' => 'Penicillin',
             'Reaction' => 'Rash',
             'Severity' => 'Moderate',
             'DiagDate' => '2026-08-01',
