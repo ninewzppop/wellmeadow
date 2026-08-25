@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AllergyController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -40,7 +41,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('appointments', AppointmentController::class);
     Route::resource('in-patients', InPatientController::class);
     Route::get('/medications', [PlaceholderController::class, 'show'])->defaults('page', 'medications')->name('medications.index');
-    Route::get('/allergies', [PlaceholderController::class, 'show'])->defaults('page', 'allergies')->name('allergies.index');
+    Route::resource('allergies', AllergyController::class)->except(['show']);
     Route::get('/rooms', [PlaceholderController::class, 'show'])->defaults('page', 'rooms')->name('rooms.index');
     Route::get('/stock', [PlaceholderController::class, 'show'])->defaults('page', 'stock')->name('stock.index');
     Route::get('/pharmacy', [PlaceholderController::class, 'show'])->defaults('page', 'pharmacy')->name('pharmacy.index');
