@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Room extends Model
 {
@@ -19,4 +20,9 @@ class Room extends Model
     protected $fillable = [
         'Room_No', 'RoomName', 'Location',
     ];
+
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'Room_No', 'Room_No');
+    }
 }

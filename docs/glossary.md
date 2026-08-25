@@ -34,3 +34,9 @@
 | View mode | Query parameter `view` with value `grouped` or `flat`; anything else falls back to `grouped`. Preserved across filter submissions and pagination links. |
 | No Patient group | Trailing group in grouped view holding allergy records whose `Pt_No` is NULL. |
 | Allergy count | Number of filtered `PatientAllergy` rows displayed for a patient in grouped view (badge "(N allergies)"); dropdown counts instead show the unfiltered lifetime total. |
+| Room queue | Same-day appointments of one room with status in {waiting list, scheduled, in consultation}, ordered by `ApptTime` then `Appt_No`. |
+| Active statuses | `waiting list`, `scheduled`, `in consultation` — the only states eligible for queue actions. |
+| In consultation | Status of the single appointment currently being examined in a room (max 1 per room). |
+| Completed - Medication Dispensed | Terminal visit state (`completed-medication`): a `Medications` row was recorded. |
+| Completed - Admitted to Waiting List | Terminal visit state (`completed-waitlist`): an `InPatient` waiting-list row was created (`Bed_No` NULL until a bed is placed). |
+| Allergy conflict | Prescribed drug matches a `PatientAllergy` row by `Drug_No` or case-insensitive name; saving requires explicit override confirmation. |

@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class ClinicalSeeder extends Seeder
@@ -29,6 +30,16 @@ class ClinicalSeeder extends Seeder
             'TelNo' => '01225 555 0302', 'DOB' => '1952-08-30', 'Sex' => 'M', 'MaritalStat' => 'Widowed',
             'DateReg' => '2026-02-22', 'Clinic_No' => 'LD02',
         ]);
+        DB::table('Patient')->updateOrInsert(['Pt_No' => 'PT003'], [
+            'FirstName' => 'Mary', 'LastName' => 'Jones', 'Address' => '12 Orchard Way, Bristol',
+            'TelNo' => '0117 555 0303', 'DOB' => '1990-11-05', 'Sex' => 'F', 'MaritalStat' => 'Single',
+            'DateReg' => '2026-03-08', 'Clinic_No' => 'LD01',
+        ]);
+        DB::table('Patient')->updateOrInsert(['Pt_No' => 'PT004'], [
+            'FirstName' => 'Leo', 'LastName' => 'Wong', 'Address' => '4 Bridge Street, Bath',
+            'TelNo' => '01225 555 0304', 'DOB' => '1978-04-21', 'Sex' => 'M', 'MaritalStat' => 'Married',
+            'DateReg' => '2026-04-02', 'Clinic_No' => 'LD02',
+        ]);
 
         DB::table('NextOfKin')->updateOrInsert(['NOK_No' => 'NOK01'], [
             'Pt_No' => 'PT001', 'FirstName' => 'Mark', 'LastName' => 'Brown', 'Relationship' => 'Husband',
@@ -44,6 +55,35 @@ class ClinicalSeeder extends Seeder
         ]);
         DB::table('Appointment')->updateOrInsert(['Appt_No' => 'A002'], [
             'Pt_No' => 'PT002', 'Consult_Stf_No' => 'S1002', 'ApptDate' => '2026-08-21', 'ApptTime' => '11:00:00', 'Room_No' => 'R002',
+        ]);
+
+        // Same-day demo queue for the Rooms pages (ADR-0004).
+        $today = Carbon::today()->toDateString();
+
+        DB::table('Appointment')->updateOrInsert(['Appt_No' => 'A010'], [
+            'Pt_No' => 'PT003', 'Consult_Stf_No' => 'S1002', 'ApptDate' => $today, 'ApptTime' => '16:00:00',
+            'Room_No' => 'R001', 'status' => 'waiting list',
+        ]);
+        DB::table('Appointment')->updateOrInsert(['Appt_No' => 'A011'], [
+            'Pt_No' => 'PT001', 'Consult_Stf_No' => 'S1002', 'ApptDate' => $today, 'ApptTime' => '09:45:00',
+            'Room_No' => 'R001', 'status' => 'in consultation',
+        ]);
+        DB::table('Appointment')->updateOrInsert(['Appt_No' => 'A012'], [
+            'Pt_No' => 'PT004', 'Consult_Stf_No' => 'S1002', 'ApptDate' => $today, 'ApptTime' => '10:15:00',
+            'Room_No' => 'R002', 'status' => 'scheduled',
+        ]);
+        DB::table('Appointment')->updateOrInsert(['Appt_No' => 'A013'], [
+            'Pt_No' => 'PT002', 'Consult_Stf_No' => 'S1002', 'ApptDate' => $today, 'ApptTime' => '13:30:00',
+            'Room_No' => 'R002', 'status' => 'completed-medication',
+        ]);
+        DB::table('Appointment')->updateOrInsert(['Appt_No' => 'A014'], [
+            'Pt_No' => 'PT003', 'Consult_Stf_No' => 'S1002', 'ApptDate' => $today, 'ApptTime' => '09:30:00',
+            'Room_No' => 'R001', 'status' => 'completed-waitlist',
+        ]);
+
+        DB::table('PatientAllergy')->updateOrInsert(['Allergy_No' => 'AL20'], [
+            'Pt_No' => 'PT003', 'Drug_No' => 'DR01', 'Allergy_Name' => 'Paracetamol',
+            'Reaction' => 'Anaphylaxis', 'Severity' => 'Severe', 'DiagDate' => '2025-06-10', 'Rec_Stf_No' => 'S1002',
         ]);
 
         DB::table('Outpatient')->updateOrInsert(['Appt_out_No' => 'A001'], []);

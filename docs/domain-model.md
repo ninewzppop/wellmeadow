@@ -136,3 +136,67 @@ grouping of `PatientAllergy` rows by `Pt_No`.
 | Flat listing | same base query, existing 15/page paginator | unchanged behaviour |
 | Dropdown totals | single grouped count query (`GROUP BY Pt_No`) | independent of other filters |
 | Schema | — | none — read-only over existing tables |
+
+---
+
+# Room queue & post-consultation actions (Patient Visit)
+
+Added 2026-08-25 (ADR-0004).
+
+Read/write flow over **existing entities only** — the queue is a filtered
+view of `Appointment`; completing a visit updates `Appointment.status` and
+optionally creates a `Medications` or waiting-list `InPatient` row.
+
+## Entities involved (all existing)
+
+| Entity | Role in this feature | Lifecycle touched |
+|---|---|---|
+| Appointment | The queue entry / visit; `status` drives the flow | created via appointments page; status transitions here |
+| Room | Groups appointments into queues | read-only |
+| Medications | Created when visit ends with dispensing | create-only here |
+| InPatient | Created as waiting-list row on admit (`Bed_No` NULL, `DateWaitList` = today, `ExpStayDays` set) | create-only here; bed placement later via in-patients page |
+| PatientAllergy | Queue indicator + medication safety check | read-only |
+| Patient / Stf / Pharmaceutical / Wd | Display + validation references | read-only |
+
+## Value objects
+
+- **Queue status** (stored ≤ 20 chars, labels mapped in code):
+  `waiting list`, `scheduled`, `in consultation`,
+  `completed-medication`, `completed-waitlist`, `completed`
+  (+ legacy `cancelled`, `no-show` outside queues).
+- **Active statuses**: {waiting list, scheduled, in consultation}.
+- **Allergy conflict**: prescribed drug matches an allergy by `Drug_No`
+  OR case-insensitive `Allergy_Name` = drug name.
+
+## Relationships
+
+- Room 1—N Appointment (queue grouping)
+- Appointment N—1 Patient, N—1 Stf (consultant)
+- Medications N—1 Patient, Drug, Stf (= consultant who completed)
+- InPatient N—1 Patient, optional Bed (NULL while waiting)
+
+## Invariants
+
+1. At most one appointment per room has status `in consultation`.
+2. Only `waiting list`/`scheduled` → `in consultation` → exactly one of
+   `completed-*`; terminal states never transition via queue actions.
+3. A room's active queue contains only same-day appointments with active
+   statuses, ordered by `ApptTime`, then `Appt_No`.
+4. Medication rows require `FinishDate ≥ StartDate`, `UnitsPerDay ≥ 1`;
+   saving with a conflict requires explicit override confirmation
+   (client checkbox + server re-check).
+5. Waiting-list `InPatient` rows always have `Bed_No` NULL,
+   `DateWaitList` set, `DatePlaced` NULL.
+6. New `Med_No` / `In_Pt_No` are generated server-side within
+   `varchar(10)`.
+
+## Persistence map
+
+| Concern | Storage/Query | Notes |
+|---|---|---|
+| Room board counts | `GROUP BY Room_No, status` for today | index on `status` exists |
+| Day queue | `Appointment` whereDate `ApptDate` + status IN (active) orderBy `ApptTime` | eager loads patient.allergies.drug, consultant |
+| Allergy indicator | nested eager load `patient.allergies.drug` | no extra queries per row |
+| Medication save | insert `Medications` + status update, transaction | conflict re-checked server-side |
+| Admit save | insert `InPatient` (waiting shape) + status update, transaction | ward chosen later at bed placement |
+| Schema | — | none — existing columns only |
