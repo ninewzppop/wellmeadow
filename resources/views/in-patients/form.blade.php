@@ -47,14 +47,7 @@
                         <label class="mb-1 block text-sm font-medium text-slate-700">
                             {{ __('Patient') }} <span class="text-red-500">*</span>
                         </label>
-                        <select name="Pt_No" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" required>
-                            <option value="">{{ __('Select Patient') }}</option>
-                            @foreach ($patients as $patient)
-                                <option value="{{ $patient->Pt_No }}" {{ old('Pt_No', $inPatient->Pt_No) == $patient->Pt_No ? 'selected' : '' }}>
-                                    {{ $patient->full_name }} ({{ $patient->Pt_No }})
-                                </option>
-                            @endforeach
-                        </select>
+                        <x-patient-select name="Pt_No" :patients="$patients" :selected="old('Pt_No', $inPatient->Pt_No)" />
                         @error('Pt_No')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
