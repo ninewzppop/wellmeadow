@@ -15,26 +15,18 @@
             <p class="mt-1 text-sm text-slate-500">{{ $room->Location ?? '—' }}</p>
         </div>
 
-        {{-- Date picker + add to queue --}}
-        <div class="flex flex-wrap items-start gap-3">
-            <form method="GET" action="{{ route('rooms.show', $room) }}"
-                  class="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-                <div>
-                    <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Queue date') }}</label>
-                    <input type="date" name="date" value="{{ $date->toDateString() }}"
-                           class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none">
-                </div>
-                <button type="submit"
-                        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-                    {{ __('Apply') }}
-                </button>
-                <a href="{{ route('rooms.show', [$room, 'date' => now()->toDateString()]) }}"
-                   class="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100">
-                    {{ __('Today') }}
+        {{-- Selected date (chosen on the board) + add to queue --}}
+        <div class="flex flex-wrap items-stretch gap-3">
+            <div class="flex flex-col justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 shadow-sm">
+                <span class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ __('Queue date') }}</span>
+                <span class="text-sm font-semibold text-slate-800">{{ $date->format('d/m/Y') }}</span>
+                <a href="{{ route('rooms.index', ['date' => $date->toDateString()]) }}"
+                   class="mt-0.5 text-xs font-medium text-blue-600 hover:underline">
+                    {{ __('Change date') }}
                 </a>
-            </form>
+            </div>
             <a href="{{ route('appointments.create', ['room' => $room->Room_No, 'date' => $date->toDateString()]) }}"
-               class="flex items-center gap-2 self-stretch rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+               class="flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
                 <span aria-hidden="true">+</span> {{ __('Add to queue') }}
             </a>
         </div>

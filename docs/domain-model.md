@@ -217,3 +217,7 @@ entities — no schema impact.
   status vocabulary has one source of truth across pages.
 
 Schema: unchanged.
+
+Added 2026-08-26 (ADR-0006): the queue date is selected once on the rooms
+board (`?date=`, default today, invalid → today) and flows through card
+links into each room's day queue; the queue page itself is picker-less.

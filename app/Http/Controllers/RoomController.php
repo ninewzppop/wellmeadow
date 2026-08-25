@@ -17,14 +17,14 @@ use Illuminate\View\View;
 
 class RoomController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $today = Carbon::today();
+        $date = $this->resolveDate($request);
 
         $rooms = Room::orderBy('Room_No')->get();
 
         $counts = Appointment::query()
-            ->whereDate('ApptDate', $today->toDateString())
+            ->whereDate('ApptDate', $date->toDateString())
             ->selectRaw('Room_No, status, COUNT(*) as total')
             ->groupBy('Room_No', 'status')
             ->get()
@@ -45,7 +45,7 @@ class RoomController extends Controller
         return view('rooms.index', [
             'rooms' => $rooms,
             'summary' => $summary,
-            'today' => $today,
+            'date' => $date,
         ]);
     }
 

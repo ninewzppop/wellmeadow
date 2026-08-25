@@ -3,19 +3,42 @@
 @section('title', __('Rooms'))
 
 @section('content')
-    <div class="mb-6">
-        <h1 class="text-2xl font-bold text-slate-900">{{ __('Consultation Rooms') }}</h1>
-        <p class="mt-1 text-sm text-slate-500">
-            {{ __('Pick a room to view and manage its patient queue.') }}
-        </p>
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">{{ __('Consultation Rooms') }}</h1>
+            <p class="mt-1 text-sm text-slate-500">
+                {{ __('Pick a room to view and manage its patient queue.') }}
+            </p>
+        </div>
+
+        {{-- Board-level queue date --}}
+        <form method="GET" action="{{ route('rooms.index') }}"
+              class="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+            <div>
+                <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Queue date') }}</label>
+                <input type="date" name="date" value="{{ $date->toDateString() }}"
+                       onchange="this.form.submit()"
+                       class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none">
+            </div>
+            @if (! $date->isToday())
+                <a href="{{ route('rooms.index') }}"
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100">
+                    {{ __('Today') }}
+                </a>
+            @endif
+        </form>
     </div>
+
+    <p class="mb-4 -mt-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+        {{ __('Showing queues for :date', ['date' => $date->format('d/m/Y')]) }}
+    </p>
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         @forelse ($rooms as $room)
             @php
                 $stats = $summary->get($room->Room_No, ['waiting' => 0, 'inConsultation' => 0, 'completed' => 0]);
             @endphp
-            <a href="{{ route('rooms.show', $room) }}"
+            <a href="{{ route('rooms.show', ['room' => $room->Room_No, 'date' => $date->toDateString()]) }}"
                class="group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-300 hover:shadow-md">
                 <div class="flex items-start justify-between gap-3">
                     <div>
@@ -41,11 +64,11 @@
                         <dd class="text-xl font-bold text-sky-700">{{ $stats['waiting'] }}</dd>
                     </div>
                     <div class="rounded-xl bg-slate-50 px-2 py-2.5">
-                        <dt class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ __('Done today') }}</dt>
+                        <dt class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ __('Done') }}</dt>
                         <dd class="text-xl font-bold text-slate-700">{{ $stats['completed'] }}</dd>
                     </div>
                     <div class="rounded-xl bg-slate-50 px-2 py-2.5">
-                        <dt class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ __('Total today') }}</dt>
+                        <dt class="text-[11px] font-medium uppercase tracking-wide text-slate-500">{{ __('Total') }}</dt>
                         <dd class="text-xl font-bold text-slate-700">{{ $stats['waiting'] + $stats['inConsultation'] + $stats['completed'] }}</dd>
                     </div>
                 </dl>

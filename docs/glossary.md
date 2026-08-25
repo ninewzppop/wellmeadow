@@ -42,3 +42,4 @@
 | Allergy conflict | Prescribed drug matches a `PatientAllergy` row by `Drug_No` or case-insensitive name; saving requires explicit override confirmation. |
 | Queue-context creation | Creating an appointment from a room's queue page (`?room=&date=`): form pre-fills room/date and saving redirects back to that day queue. |
 | Form-selectable statuses | `waiting list`, `scheduled`, `cancelled`, `no-show` — the only statuses settable via the appointment form; lifecycle states are queue-action-only. |
+| Board date | The queue day chosen once on the rooms board (`/rooms?date=`, default today) and carried into every room card link and the queue pages it opens. |
