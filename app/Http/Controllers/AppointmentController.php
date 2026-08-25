@@ -8,6 +8,7 @@ use App\Models\Room;
 use App\Models\Stf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class AppointmentController extends Controller
@@ -58,7 +59,7 @@ class AppointmentController extends Controller
 
         $consultants = Stf::orderBy('LastName')->orderBy('FirstName')->get();
         $rooms = Room::orderBy('RoomName')->get();
-        $statuses = ['scheduled', 'completed', 'cancelled', 'no-show'];
+        $statuses = Appointment::statusLabels();
 
         return view('appointments.index', compact('appointments', 'consultants', 'rooms', 'statuses'));
     }
@@ -74,17 +75,24 @@ class AppointmentController extends Controller
             'patients' => $patients,
             'consultants' => $consultants,
             'rooms' => $rooms,
+            'statuses' => $this->formStatuses(null),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateAppointment($request);
+        $data['Appt_No'] = $this->generateId('Appointment', 'Appt_No', 'A');
 
-        $appointment = Appointment::create($data);
+        Appointment::create($data);
+
+        if ($queueContext = $this->queueContext($request)) {
+            return redirect()->route('rooms.show', $queueContext)
+                ->with('status', __('Created appointment :no.', ['no' => $data['Appt_No']]));
+        }
 
         return redirect()->route('appointments.index')
-            ->with('status', __('Created appointment :no.', ['no' => $appointment->Appt_No]));
+            ->with('status', __('Created appointment :no.', ['no' => $data['Appt_No']]));
     }
 
     public function show(Appointment $appointment): View
@@ -100,12 +108,18 @@ class AppointmentController extends Controller
         $consultants = Stf::orderBy('LastName')->orderBy('FirstName')->get();
         $rooms = Room::orderBy('RoomName')->get();
 
-        return view('appointments.form', compact('appointment', 'patients', 'consultants', 'rooms'));
+        return view('appointments.form', [
+            'appointment' => $appointment,
+            'patients' => $patients,
+            'consultants' => $consultants,
+            'rooms' => $rooms,
+            'statuses' => $this->formStatuses($appointment),
+        ]);
     }
 
     public function update(Request $request, Appointment $appointment): RedirectResponse
     {
-        $data = $this->validateAppointment($request, $appointment->Appt_No);
+        $data = $this->validateAppointment($request, $appointment);
 
         $appointment->update($data);
 
@@ -123,21 +137,51 @@ class AppointmentController extends Controller
             ->with('status', __('Deleted appointment :no.', ['no' => $no]));
     }
 
-    protected function validateAppointment(Request $request, ?string $ignoreApptNo = null): array
+    private function formStatuses(?Appointment $appointment): array
     {
+        $selectable = [
+            Appointment::STATUS_WAITING,
+            Appointment::STATUS_SCHEDULED,
+            'cancelled',
+            'no-show',
+        ];
+
+        // Lifecycle states (in consultation / completed-*) come only from
+        // queue actions; editing such a record locks its status.
+        if ($appointment && ! in_array($appointment->status, $selectable, true)) {
+            return [$appointment->status];
+        }
+
+        return $selectable;
+    }
+
+    private function queueContext(Request $request): ?array
+    {
+        $room = (string) $request->input('ctx_room', '');
+        $date = (string) $request->input('ctx_date', '');
+
+        if ($room === '' || ! Room::whereKey($room)->exists()) {
+            return null;
+        }
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $date, $m) !== 1 || ! checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
+            return null;
+        }
+
+        return ['room' => $room, 'date' => $date];
+    }
+
+    protected function validateAppointment(Request $request, ?Appointment $existing = null): array
+    {
+        $allowedStatuses = $this->formStatuses($existing);
+
         return $request->validate([
-            'Appt_No' => [
-                'required',
-                'string',
-                'max:10',
-                $ignoreApptNo ? 'unique:Appointment,Appt_No,'.$ignoreApptNo.',Appt_No' : 'unique:Appointment,Appt_No',
-            ],
             'Pt_No' => ['required', 'exists:Patient,Pt_No'],
             'Consult_Stf_No' => ['required', 'exists:Stf,Stf_No'],
             'ApptDate' => ['required', 'date'],
             'ApptTime' => ['required', 'date_format:H:i'],
             'Room_No' => ['required', 'exists:Room,Room_No'],
-            'status' => ['required', 'string', 'max:20'],
+            'status' => ['required', 'string', 'max:20', Rule::in($allowedStatuses)],
         ]);
     }
 }

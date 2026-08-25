@@ -250,5 +250,10 @@
     "Allergy conflict: :detail. Tick the confirmation box to dispense anyway.": "พบประวัติแพ้ยาตรงกับ: :detail กรุณาติ๊กยืนยันเพื่อจ่ายยา",
     "Medication dispensed for :name. Visit completed.": "จ่ายยาให้ :name เรียบร้อย และจบการตรวจแล้ว",
     ":name added to the in-patient waiting list. Visit completed.": "เพิ่ม :name เข้า waiting list ผู้ป่วยในเรียบร้อย และจบการตรวจแล้ว",
-    "Visit completed for :name.": "จบการตรวจ :name เรียบร้อย"
+    "Visit completed for :name.": "จบการตรวจ :name เรียบร้อย",
+
+    "The appointment number is generated automatically — just pick and save.": "ระบบจะสร้างเลขที่นัดหมายให้อัตโนมัติ — เพียงเลือกข้อมูลแล้วกดบันทึก",
+    "Managed from the room queue page.": "สถานะนี้จัดการจากหน้าคิวของห้องตรวจ",
+    "Open queue": "เปิดคิว",
+    "Add to queue": "เพิ่มเข้าคิว"
 }

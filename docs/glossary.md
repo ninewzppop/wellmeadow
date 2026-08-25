@@ -40,3 +40,5 @@
 | Completed - Medication Dispensed | Terminal visit state (`completed-medication`): a `Medications` row was recorded. |
 | Completed - Admitted to Waiting List | Terminal visit state (`completed-waitlist`): an `InPatient` waiting-list row was created (`Bed_No` NULL until a bed is placed). |
 | Allergy conflict | Prescribed drug matches a `PatientAllergy` row by `Drug_No` or case-insensitive name; saving requires explicit override confirmation. |
+| Queue-context creation | Creating an appointment from a room's queue page (`?room=&date=`): form pre-fills room/date and saving redirects back to that day queue. |
+| Form-selectable statuses | `waiting list`, `scheduled`, `cancelled`, `no-show` — the only statuses settable via the appointment form; lifecycle states are queue-action-only. |

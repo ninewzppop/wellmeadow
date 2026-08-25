@@ -200,3 +200,20 @@ optionally creates a `Medications` or waiting-list `InPatient` row.
 | Medication save | insert `Medications` + status update, transaction | conflict re-checked server-side |
 | Admit save | insert `InPatient` (waiting shape) + status update, transaction | ward chosen later at bed placement |
 | Schema | — | none — existing columns only |
+
+---
+
+# Appointment form & index alignment
+
+Added 2026-08-26 (ADR-0005). UI/read-model refinement of the same
+entities — no schema impact.
+
+- `Appt_No` auto-generated on create (prefix `A`, zero-padded max-suffix
+  increment); never typed by users.
+- Form-selectable statuses limited to {`waiting list`, `scheduled`,
+  `cancelled`, `no-show`}; lifecycle states (`in consultation`,
+  `completed-*`) remain queue-action-only per invariant 2 above.
+- Appointments list reuses `statusLabels()` + shared badge component so
+  status vocabulary has one source of truth across pages.
+
+Schema: unchanged.

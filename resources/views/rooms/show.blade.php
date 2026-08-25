@@ -3,18 +3,6 @@
 @section('title', __('Room Queue'))
 
 @section('content')
-    @php
-        $badgeClasses = [
-            'waiting list' => 'bg-sky-100 text-sky-700',
-            'scheduled' => 'bg-blue-100 text-blue-700',
-            'in consultation' => 'bg-amber-100 text-amber-800',
-            'completed-medication' => 'bg-emerald-100 text-emerald-700',
-            'completed-waitlist' => 'bg-violet-100 text-violet-700',
-            'completed' => 'bg-green-100 text-green-700',
-        ];
-        $defaultBadge = 'bg-slate-100 text-slate-600';
-    @endphp
-
     {{-- Header --}}
     <div class="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
@@ -27,23 +15,29 @@
             <p class="mt-1 text-sm text-slate-500">{{ $room->Location ?? '—' }}</p>
         </div>
 
-        {{-- Date picker --}}
-        <form method="GET" action="{{ route('rooms.show', $room) }}"
-              class="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
-            <div>
-                <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Queue date') }}</label>
-                <input type="date" name="date" value="{{ $date->toDateString() }}"
-                       class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none">
-            </div>
-            <button type="submit"
-                    class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-                {{ __('Apply') }}
-            </button>
-            <a href="{{ route('rooms.show', [$room, 'date' => now()->toDateString()]) }}"
-               class="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100">
-                {{ __('Today') }}
+        {{-- Date picker + add to queue --}}
+        <div class="flex flex-wrap items-start gap-3">
+            <form method="GET" action="{{ route('rooms.show', $room) }}"
+                  class="flex items-end gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Queue date') }}</label>
+                    <input type="date" name="date" value="{{ $date->toDateString() }}"
+                           class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none">
+                </div>
+                <button type="submit"
+                        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
+                    {{ __('Apply') }}
+                </button>
+                <a href="{{ route('rooms.show', [$room, 'date' => now()->toDateString()]) }}"
+                   class="rounded-lg px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100">
+                    {{ __('Today') }}
+                </a>
+            </form>
+            <a href="{{ route('appointments.create', ['room' => $room->Room_No, 'date' => $date->toDateString()]) }}"
+               class="flex items-center gap-2 self-stretch rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+                <span aria-hidden="true">+</span> {{ __('Add to queue') }}
             </a>
-        </form>
+        </div>
     </div>
 
     {{-- Active queue --}}
@@ -105,15 +99,13 @@
                                 </td>
                                 <td class="px-5 py-4 text-slate-600">{{ $appt->consultant?->full_name ?? '—' }}</td>
                                 <td class="px-5 py-4">
-                                    <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold {{ $badgeClasses[$appt->status] ?? $defaultBadge }}">
-                                        @if ($isBusyNow)
-                                            <span class="relative flex h-1.5 w-1.5">
-                                                <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75"></span>
-                                                <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-600"></span>
-                                            </span>
-                                        @endif
-                                        {{ $appt->statusLabel() }}
-                                    </span>
+                                    @if ($isBusyNow)
+                                        <span class="mr-1.5 inline-flex h-2 w-2">
+                                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75"></span>
+                                            <span class="relative inline-flex h-2 w-2 rounded-full bg-amber-600"></span>
+                                        </span>
+                                    @endif
+                                    <x-status-badge :status="$appt->status" />
                                 </td>
                                 <td class="px-5 py-4">
                                     <div class="flex flex-wrap items-center justify-end gap-2">
@@ -188,9 +180,7 @@
                                 </td>
                                 <td class="px-5 py-3">{{ $appt->consultant?->full_name ?? '—' }}</td>
                                 <td class="px-5 py-3">
-                                    <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $badgeClasses[$appt->status] ?? $defaultBadge }}">
-                                        {{ $appt->statusLabel() }}
-                                    </span>
+                                    <x-status-badge :status="$appt->status" />
                                 </td>
                             </tr>
                         @endforeach

@@ -44,9 +44,9 @@
                 <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Status') }}</label>
                 <select name="status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
                     <option value="">{{ __('All') }}</option>
-                    @foreach ($statuses as $status)
+                    @foreach ($statuses as $status => $label)
                         <option value="{{ $status }}" @selected(request('status') === $status)>
-                            {{ ucfirst(str_replace('-', ' ', $status)) }}
+                            {{ $label }}
                         </option>
                     @endforeach
                 </select>
@@ -109,20 +109,11 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @foreach ($appointments as $appt)
-                            @php
-                                $statusClass = match($appt->status) {
-                                    'scheduled' => 'bg-sky-100 text-sky-700',
-                                    'completed' => 'bg-emerald-100 text-emerald-700',
-                                    'cancelled' => 'bg-red-100 text-red-700',
-                                    'no-show' => 'bg-amber-100 text-amber-700',
-                                    default => 'bg-slate-100 text-slate-600',
-                                };
-                            @endphp
                             <tr class="hover:bg-slate-50">
                                 <td class="px-6 py-4 font-medium text-slate-700">{{ $appt->Appt_No }}</td>
                                 <td class="px-6 py-4 text-slate-600">
-                                    {{ $appt->ApptDate->format('d/m/Y') }}<br>
-                                    <span class="text-xs">{{ $appt->ApptTime->format('H:i') }}</span>
+                                    {{ $appt->ApptDate?->format('d/m/Y') ?? '—' }}<br>
+                                    <span class="text-xs">{{ optional($appt->ApptTime)->format('H:i') }}</span>
                                 </td>
                                 <td class="px-6 py-4 font-semibold text-slate-900">
                                     {{ $appt->patient->full_name ?? '—' }}<br>
@@ -131,12 +122,17 @@
                                 <td class="px-6 py-4 text-slate-600">{{ $appt->consultant->full_name ?? '—' }}</td>
                                 <td class="px-6 py-4 text-slate-600">{{ $appt->room->RoomName ?? '—' }} ({{ $appt->room->Room_No ?? '—' }})</td>
                                 <td class="px-6 py-4">
-                                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
-                                        {{ ucfirst(str_replace('-', ' ', $appt->status)) }}
-                                    </span>
+                                    <x-status-badge :status="$appt->status" />
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="flex items-center justify-end gap-3">
+                                        @if ($appt->isActive() && $appt->room)
+                                            <a href="{{ route('rooms.show', ['room' => $appt->room->Room_No, 'date' => $appt->ApptDate?->toDateString()]) }}"
+                                               title="{{ __('Open queue') }}"
+                                               class="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100">
+                                                &#128203; {{ __('Open queue') }}
+                                            </a>
+                                        @endif
                                         <a href="{{ route('appointments.show', $appt) }}"
                                            title="{{ __('View') }}"
                                            class="text-slate-400 hover:text-slate-700">

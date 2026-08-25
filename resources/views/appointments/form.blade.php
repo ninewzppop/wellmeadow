@@ -5,14 +5,22 @@
 @section('content')
 <div class="mx-auto max-w-4xl">
     <div class="rounded-2xl bg-white p-8 shadow-sm">
-        <h1 class="mb-6 text-2xl font-bold text-slate-900">
+        <h1 class="mb-1 text-2xl font-bold text-slate-900">
             {{ $appointment->exists ? __('Edit Appointment') : __('New Appointment') }}
         </h1>
+        @if (! $appointment->exists)
+            <p class="mb-6 text-sm text-slate-500">{{ __('The appointment number is generated automatically — just pick and save.') }}</p>
+        @else
+            <p class="mb-6 text-sm text-slate-500">{{ __('Appointment No.') }}: <span class="font-semibold text-slate-700">{{ $appointment->Appt_No }}</span></p>
+        @endif
 
         <form method="POST" action="{{ $appointment->exists ? route('appointments.update', $appointment) : route('appointments.store') }}">
             @csrf
             @if ($appointment->exists)
                 @method('PUT')
+            @else
+                <input type="hidden" name="ctx_room" value="{{ request('room') }}">
+                <input type="hidden" name="ctx_date" value="{{ request('date') }}">
             @endif
 
             @if ($errors->any())
@@ -30,37 +38,6 @@
                 <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">
-                            {{ __('Appointment No.') }} <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="Appt_No" value="{{ old('Appt_No', $appointment->Appt_No) }}" maxlength="10"
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                               required @if($appointment->exists) readonly @endif>
-                        @if($appointment->exists)
-                            <p class="mt-1 text-xs text-slate-400">{{ __('Cannot be changed after creation') }}</p>
-                        @endif
-                        @error('Appt_No')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">
-                            {{ __('Status') }} <span class="text-red-500">*</span>
-                        </label>
-                        <select name="status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" required>
-                            <option value="">{{ __('Select') }}</option>
-                            <option value="scheduled" {{ old('status', $appointment->status) === 'scheduled' ? 'selected' : '' }}>{{ __('Scheduled') }}</option>
-                            <option value="completed" {{ old('status', $appointment->status) === 'completed' ? 'selected' : '' }}>{{ __('Completed') }}</option>
-                            <option value="cancelled" {{ old('status', $appointment->status) === 'cancelled' ? 'selected' : '' }}>{{ __('Cancelled') }}</option>
-                            <option value="no-show" {{ old('status', $appointment->status) === 'no-show' ? 'selected' : '' }}>{{ __('No Show') }}</option>
-                        </select>
-                        @error('status')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="sm:col-span-2">
-                        <label class="mb-1 block text-sm font-medium text-slate-700">
                             {{ __('Patient') }} <span class="text-red-500">*</span>
                         </label>
                         <select name="Pt_No" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" required>
@@ -76,7 +53,7 @@
                         @enderror
                     </div>
 
-                    <div class="sm:col-span-2">
+                    <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">
                             {{ __('Doctor') }} <span class="text-red-500">*</span>
                         </label>
@@ -93,14 +70,14 @@
                         @enderror
                     </div>
 
-                    <div class="sm:col-span-2">
+                    <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">
                             {{ __('Room') }} <span class="text-red-500">*</span>
                         </label>
                         <select name="Room_No" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" required>
                             <option value="">{{ __('Select Room') }}</option>
                             @foreach ($rooms as $room)
-                                <option value="{{ $room->Room_No }}" {{ old('Room_No', $appointment->Room_No) == $room->Room_No ? 'selected' : '' }}>
+                                <option value="{{ $room->Room_No }}" {{ old('Room_No', $appointment->Room_No ?? request('room')) == $room->Room_No ? 'selected' : '' }}>
                                     {{ $room->RoomName }} ({{ $room->Room_No }})
                                 </option>
                             @endforeach
@@ -112,9 +89,38 @@
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">
+                            {{ __('Status') }} <span class="text-red-500">*</span>
+                        </label>
+                        @php
+                            $statusLocked = $appointment->exists && count($statuses) === 1;
+                        @endphp
+                        <select name="status" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
+                                required @disabled($statusLocked)>
+                            @if ($statusLocked)
+                                <option value="{{ $statuses[0] }}" selected>
+                                    {{ \App\Models\Appointment::statusLabels()[$statuses[0]] ?? $statuses[0] }}
+                                </option>
+                            @else
+                                @foreach ($statuses as $status)
+                                    <option value="{{ $status }}" {{ old('status', $appointment->status ?? 'scheduled') === $status ? 'selected' : '' }}>
+                                        {{ \App\Models\Appointment::statusLabels()[$status] ?? ucfirst($status) }}
+                                    </option>
+                                @endforeach
+                            @endif
+                        </select>
+                        @if ($statusLocked)
+                            <p class="mt-1 text-xs text-slate-400">{{ __('Managed from the room queue page.') }}</p>
+                        @endif
+                        @error('status')
+                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">
                             {{ __('Appointment Date') }} <span class="text-red-500">*</span>
                         </label>
-                        <input type="date" name="ApptDate" value="{{ old('ApptDate', $appointment->ApptDate?->format('Y-m-d')) }}"
+                        <input type="date" name="ApptDate" value="{{ old('ApptDate', $appointment->ApptDate?->format('Y-m-d') ?? request('date')) }}"
                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none" required>
                         @error('ApptDate')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
@@ -135,10 +141,17 @@
             </div>
 
             <div class="mt-8 flex justify-end gap-3 border-t border-slate-100 pt-6">
-                <a href="{{ route('appointments.index') }}"
-                   class="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
-                    {{ __('Cancel') }}
-                </a>
+                @if (! $appointment->exists && request('room') && request('date'))
+                    <a href="{{ route('rooms.show', ['room' => request('room'), 'date' => request('date')]) }}"
+                       class="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
+                        {{ __('Cancel') }}
+                    </a>
+                @else
+                    <a href="{{ route('appointments.index') }}"
+                       class="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-200">
+                        {{ __('Cancel') }}
+                    </a>
+                @endif
                 <button type="submit"
                         class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
                     {{ $appointment->exists ? __('Save changes') : __('Save') }}

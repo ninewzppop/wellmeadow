@@ -272,28 +272,4 @@ class RoomController extends Controller
         return preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $raw, $m) === 1
             && checkdate((int) $m[2], (int) $m[3], (int) $m[1]);
     }
-
-    private function generateId(string $table, string $column, string $prefix): string
-    {
-        $existing = DB::table($table)->where($column, 'like', $prefix.'%')->pluck($column);
-
-        $maxSuffix = $existing
-            ->map(fn ($id) => (int) substr((string) $id, strlen($prefix)))
-            ->max();
-
-        $next = ((int) $maxSuffix) + 1;
-        $width = 10 - strlen($prefix);
-
-        for ($i = 0; $i < 100; $i++) {
-            $candidate = $prefix.str_pad((string) $next, $width, '0', STR_PAD_LEFT);
-
-            if (strlen($candidate) <= 10 && ! $existing->contains($candidate)) {
-                return $candidate;
-            }
-
-            $next++;
-        }
-
-        return substr($prefix.substr((string) time(), -$width), 0, 10);
-    }
 }
