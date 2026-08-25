@@ -125,7 +125,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-slate-600">
-                                    {{ $allergy->Allergy_Name ?? $allergy->drug?->Name ?? '—' }}
+                                    {{ $allergy->drug?->Name ?? $allergy->Allergy_Name ?? '—' }}
                                 </td>
                                 <td class="px-6 py-4 text-slate-600">{{ $allergy->Reaction }}</td>
                                 <td class="px-6 py-4">
@@ -210,7 +210,7 @@
                                     </td>
                                 @endif
                                 <td class="px-6 py-4 text-slate-600">
-                                    {{ $allergy->Allergy_Name ?? $allergy->drug?->Name ?? '—' }}
+                                    {{ $allergy->drug?->Name ?? $allergy->Allergy_Name ?? '—' }}
                                     <span class="ml-1 text-xs text-slate-400">#{{ $allergy->Allergy_No }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-slate-600">{{ $allergy->Reaction }}</td>
@@ -282,7 +282,7 @@
                                 <li class="flex items-start justify-between gap-3">
                                     <div class="min-w-0">
                                         <p class="text-sm font-medium text-slate-800">
-                                            {{ $allergy->Allergy_Name ?? $allergy->drug?->Name ?? '—' }}
+                                            {{ $allergy->drug?->Name ?? $allergy->Allergy_Name ?? '—' }}
                                             <span class="text-xs font-normal text-slate-400">#{{ $allergy->Allergy_No }}</span>
                                         </p>
                                         <p class="mt-0.5 truncate text-xs text-slate-500">{{ $allergy->Reaction }}</p>
