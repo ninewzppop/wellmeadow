@@ -16,6 +16,11 @@ class Supplier extends Model
 
     public $timestamps = false;
 
+    public function getRouteKeyName(): string
+    {
+        return 'Suppl_No';
+    }
+
     protected $fillable = [
         'Suppl_No', 'Name', 'Address', 'TelNo', 'FaxNo',
     ];

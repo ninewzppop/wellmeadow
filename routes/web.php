@@ -5,11 +5,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InPatientController;
 use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\LocalDoctorController;
 use App\Http\Controllers\PatientController;
 use App\Http\Controllers\PlaceholderController;
 use App\Http\Controllers\RotaController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffSearchController;
+use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WardController;
 use App\Http\Controllers\WardReportController;
 use Illuminate\Support\Facades\Route;
@@ -48,8 +50,10 @@ Route::middleware('auth')->group(function () {
     Route::put('/rota/{allocation}', [RotaController::class, 'update'])->name('rota.update');
     Route::delete('/rota/{allocation}', [RotaController::class, 'destroy'])->name('rota.destroy');
     Route::redirect('/allocations', '/rota');
-    Route::get('/suppliers', [PlaceholderController::class, 'show'])->defaults('page', 'suppliers')->name('suppliers.index');
-    Route::get('/local-doctors', [PlaceholderController::class, 'show'])->defaults('page', 'local-doctors')->name('local-doctors.index');
+    Route::resource('suppliers', SupplierController::class);
+    Route::resource('local-doctors', LocalDoctorController::class)->parameters([
+    'local-doctors' => 'doctor',
+]);
 
     Route::middleware('admin')->group(function () {
         Route::get('/users', [PlaceholderController::class, 'show'])->defaults('page', 'users')->name('users.index');
