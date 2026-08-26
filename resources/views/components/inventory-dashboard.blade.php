@@ -14,7 +14,9 @@
     $cards[] = ['label' => __('Low stock'), 'value' => $counts['low'], 'params' => ['status' => 'low'], 'color' => 'text-amber-800 bg-amber-100'];
     $cards[] = ['label' => __('Out of stock'), 'value' => $counts['out'], 'params' => ['status' => 'out'], 'color' => 'text-red-700 bg-red-100'];
     if ($expiryCounts !== null) {
-        $cards[] = ['label' => __('Near expiry (<= 90 days)'), 'value' => $expiryCounts['nearExpiry'], 'params' => ['expiry' => 'near-expiry'], 'color' => 'text-orange-700 bg-orange-100'];
+        if (isset($expiryCounts['nearExpiry'])) {
+            $cards[] = ['label' => __('Near expiry (<= 90 days)'), 'value' => $expiryCounts['nearExpiry'], 'params' => ['expiry' => 'near-expiry'], 'color' => 'text-orange-700 bg-orange-100'];
+        }
         $cards[] = ['label' => __('Expired'), 'value' => $expiryCounts['expired'], 'params' => ['expiry' => 'expired'], 'color' => 'text-rose-800 bg-rose-200'];
     }
 @endphp

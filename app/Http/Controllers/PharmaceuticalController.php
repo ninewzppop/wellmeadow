@@ -66,7 +66,6 @@ class PharmaceuticalController extends InventoryController
         $class = $this->itemClass();
 
         return [
-            'nearExpiry' => (clone $class::query())->expiryStatus(Pharmaceutical::EXPIRY_NEAR)->count(),
             'expired' => (clone $class::query())->expiryStatus(Pharmaceutical::EXPIRY_EXPIRED)->count(),
         ];
     }

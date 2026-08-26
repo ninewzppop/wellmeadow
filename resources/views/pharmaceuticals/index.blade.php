@@ -11,7 +11,7 @@
         </a>
     </div>
 
-    <x-inventory-dashboard :counts="$counts" :urgent="$urgent" base-route="pharmacy" :expiry-counts="['nearExpiry' => $counts['nearExpiry'], 'expired' => $counts['expired']]" />
+    <x-inventory-dashboard :counts="$counts" :urgent="$urgent" base-route="pharmacy" :expiry-counts="['expired' => $counts['expired']]" />
 
     <form method="GET" action="{{ route('pharmacy.index') }}" class="mb-4 flex flex-wrap items-center gap-3">
         <input type="text" name="search" value="{{ $search }}" placeholder="{{ __('Search name / code / description') }}"
