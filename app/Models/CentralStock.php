@@ -11,9 +11,9 @@ class CentralStock extends Model
 {
     use HasStockStatus;
 
-    public const TYPE_SURGICAL = 'Surgical';
+    public const TYPE_SURGICAL = 'surgical';
 
-    public const TYPE_NON_SURGICAL = 'NonSurgical';
+    public const TYPE_NON_SURGICAL = 'non-surgical';
 
     protected $table = 'CentralStock';
 
@@ -42,8 +42,8 @@ class CentralStock extends Model
     public static function itemTypes(): array
     {
         return [
-            self::TYPE_SURGICAL => __('Surgical'),
-            self::TYPE_NON_SURGICAL => __('Non-surgical'),
+            self::TYPE_SURGICAL => __('surgical'),
+            self::TYPE_NON_SURGICAL => __('non-surgical'),
         ];
     }
 }

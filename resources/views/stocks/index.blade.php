@@ -59,7 +59,7 @@
                             <span class="block text-xs text-slate-400">{{ $item->Description }}</span>
                         </td>
                         <td class="px-4 py-3">
-                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $item->ItemType === 'Surgical' ? 'bg-violet-100 text-violet-700' : 'bg-sky-100 text-sky-700' }}">
+                            <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $item->ItemType === \App\Models\CentralStock::TYPE_SURGICAL ? 'bg-violet-100 text-violet-700' : 'bg-sky-100 text-sky-700' }}">
                                 {{ \App\Models\CentralStock::itemTypes()[$item->ItemType] ?? $item->ItemType }}
                             </span>
                         </td>

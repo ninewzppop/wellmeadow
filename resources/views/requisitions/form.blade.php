@@ -84,13 +84,13 @@
                     <select name="items[__INDEX__][ref]" required data-ref
                             class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
                         <option value="">—</option>
-                        <optgroup label="{{ __('Surgical') }}">
-                            @foreach ($supplies->where('ItemType','Surgical') as $s)
+                        <optgroup label="{{ __('surgical') }}">
+                            @foreach ($supplies->where('ItemType','surgical') as $s)
                                 <option value="ITEM:{{ $s->Item_No }}" data-cost="{{ $s->CostPerUnit ?? 0 }}" data-qty="{{ $s->QtyInStock ?? 0 }}" data-name="{{ $s->Name }}" data-desc="{{ $s->Description }}" data-dosage="" data-method="">{{ $s->Name }} ({{ $s->Item_No }}) — {{ __('Stock') }}: {{ $s->QtyInStock ?? 0 }}</option>
                             @endforeach
                         </optgroup>
-                        <optgroup label="{{ __('Non-surgical') }}">
-                            @foreach ($supplies->where('ItemType','NonSurgical')->merge($supplies->whereNotIn('ItemType',['Surgical','NonSurgical'])) as $s)
+                        <optgroup label="{{ __('non-surgical') }}">
+                            @foreach ($supplies->where('ItemType','non-surgical')->merge($supplies->whereNotIn('ItemType',['surgical','non-surgical'])) as $s)
                                 <option value="ITEM:{{ $s->Item_No }}" data-cost="{{ $s->CostPerUnit ?? 0 }}" data-qty="{{ $s->QtyInStock ?? 0 }}" data-name="{{ $s->Name }}" data-desc="{{ $s->Description }}">{{ $s->Name }} ({{ $s->Item_No }}) — {{ __('Stock') }}: {{ $s->QtyInStock ?? 0 }}</option>
                             @endforeach
                         </optgroup>

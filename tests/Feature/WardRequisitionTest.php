@@ -25,8 +25,8 @@ class WardRequisitionTest extends TestCase
     {
         Wd::create(['Wd_No' => 'WD01', 'Wd_Name' => 'Ward A']);
         Stf::create(['Stf_No' => 'S1001', 'FirstName' => 'Nurse', 'LastName' => 'A']);
-        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Bandage', 'ItemType' => 'Surgical', 'QtyInStock' => 10, 'ReorderLvl' => 5, 'CostPerUnit' => 10]);
-        CentralStock::create(['Item_No' => 'IT02', 'Name' => 'Gauze', 'ItemType' => 'NonSurgical', 'QtyInStock' => 5, 'ReorderLvl' => 3, 'CostPerUnit' => 2]);
+        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Bandage', 'ItemType' => 'surgical', 'QtyInStock' => 10, 'ReorderLvl' => 5, 'CostPerUnit' => 10]);
+        CentralStock::create(['Item_No' => 'IT02', 'Name' => 'Gauze', 'ItemType' => 'non-surgical', 'QtyInStock' => 5, 'ReorderLvl' => 3, 'CostPerUnit' => 2]);
         Pharmaceutical::create(['Drug_No' => 'DR01', 'Name' => 'Paracetamol', 'QtyInStock' => 10, 'ReorderLvl' => 5, 'CostPerUnit' => 5]);
     }
 

@@ -237,7 +237,7 @@ schema additions.
 | Entity | Table | Key attributes | Lifecycle |
 |---|---|---|---|
 | Pharmaceutical (drug) | `Pharmaceutical` (+ approved `ExpiryDate DATE NULL`) | Drug_No PK, Dosage, AdminMethod, QtyInStock, ReorderLvl, ExpiryDate, Suppl_No FK | create (auto-ID DRnn) / edit / restock / adjust / guarded delete |
-| Stock item (supply) | `CentralStock` (unmodified schema) | Item_No PK, ItemType ∈ {Surgical, NonSurgical}, Description, QtyInStock, ReorderLvl, Suppl_No FK | create (auto-ID ITnn) / edit / restock / adjust / guarded delete |
+| Stock item (supply) | `CentralStock` (unmodified schema) | Item_No PK, ItemType ∈ {surgical, non-surgical}, Description, QtyInStock, ReorderLvl, Suppl_No FK | create (auto-ID ITnn) / edit / restock / adjust / guarded delete |
 | Stock movement | `StockMovement` (**new**) | id AI PK, Drug_No NULL FK, Item_No NULL FK, QtyChange signed, Note NULL, Moved_By FK users.id NULL, MoveDate | insert-only audit log |
 
 ## Value objects
@@ -278,7 +278,7 @@ schema additions.
 | Dashboard counts | aggregate queries on status accessors' underlying conditions (`qty = 0`, `qty <= ReorderLvl`, expiry window) | per page |
 | Urgent-restock list | ORDER BY qty = 0 DESC, then low-stock | out first, then low |
 | Search | LIKE on Name / code / ItemType / Description | case-insensitive |
-| Filters | status ∈ {all, low, out, normal}; stock page adds Surgical/NonSurgical | query params |
+| Filters | status ∈ {all, low, out, normal}; stock page adds surgical/non-surgical | query params |
 | Restock/adjust | transaction: UPDATE QtyInStock + INSERT StockMovement | Moved_By = auth user |
 | Movement history | StockMovement by Drug_No/Item_No, newest first | insert-only |
 | Schema | ADD `Pharmaceutical.ExpiryDate`; CREATE `StockMovement` | only approved changes |

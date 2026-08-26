@@ -72,22 +72,22 @@ class SuppliesSeeder extends Seeder
     {
         // [Item_No, Name, ItemType, Description, QtyInStock, ReorderLvl, CostPerUnit, Suppl_No]
         return [
-            ['IT01', 'Surgical Gloves', 'Surgical', 'Latex-free gloves (box of 100)', 120, 50, 6.50, 'SUP01'],
-            ['IT02', 'Bandages', 'NonSurgical', 'Cotton bandage 10cm', 200, 80, 1.20, 'SUP01'],
-            ['IT03', 'Scalpel Set', 'Surgical', 'Sterile disposable scalpel set', 0, 15, 9.80, 'SUP01'],
-            ['IT04', 'Syringe 5ml', 'NonSurgical', 'Disposable syringe 5ml', 45, 50, 0.35, 'SUP01'],
-            ['IT05', 'IV Catheter', 'Surgical', 'Intravenous catheter 20G', 300, 100, 1.75, 'SUP02'],
-            ['IT06', 'Gauze Pads', 'NonSurgical', 'Sterile gauze pads 10x10cm', 8, 20, 0.90, 'SUP01'],
-            ['IT07', 'Face Shields', 'NonSurgical', 'Full-face protective shields', 500, 150, 2.40, 'SUP02'],
-            ['IT08', 'Suture Kit', 'Surgical', 'Basic wound closure kit', 0, 10, 14.50, 'SUP01'],
-            ['IT09', 'Blood Pressure Monitor', 'NonSurgical', 'Digital upper-arm monitor', 25, 5, 24.00, 'SUP02'],
-            ['IT10', 'Sterile Drapes', 'Surgical', 'Operating field drapes', 18, 25, 4.20, 'SUP01'],
-            ['IT11', 'Oxygen Masks', 'NonSurgical', 'Adult oxygen mask with tubing', 90, 40, 3.10, 'SUP02'],
-            ['IT12', 'Forceps', 'Surgical', 'Stainless tissue forceps', 60, 30, 7.60, 'SUP01'],
-            ['IT13', 'Urinary Catheter', 'NonSurgical', 'Foley catheter 16Fr', 3, 15, 5.40, 'SUP02'],
-            ['IT14', 'Needle Holder', 'Surgical', 'Mayo-Hegar needle holder 16cm', 22, 8, 11.90, 'SUP01'],
-            ['IT15', 'Wheelchair', 'NonSurgical', 'Folding transit wheelchair', 4, 2, 95.00, 'SUP02'],
-            ['IT16', 'Chest Drain Kit', 'Surgical', 'Tube thoracostomy kit', 0, 6, 32.00, 'SUP01'],
+            ['IT01', 'Surgical Gloves', 'surgical', 'Latex-free gloves (box of 100)', 120, 50, 6.50, 'SUP01'],
+            ['IT02', 'Bandages', 'non-surgical', 'Cotton bandage 10cm', 200, 80, 1.20, 'SUP01'],
+            ['IT03', 'Scalpel Set', 'surgical', 'Sterile disposable scalpel set', 0, 15, 9.80, 'SUP01'],
+            ['IT04', 'Syringe 5ml', 'non-surgical', 'Disposable syringe 5ml', 45, 50, 0.35, 'SUP01'],
+            ['IT05', 'IV Catheter', 'surgical', 'Intravenous catheter 20G', 300, 100, 1.75, 'SUP02'],
+            ['IT06', 'Gauze Pads', 'non-surgical', 'Sterile gauze pads 10x10cm', 8, 20, 0.90, 'SUP01'],
+            ['IT07', 'Face Shields', 'non-surgical', 'Full-face protective shields', 500, 150, 2.40, 'SUP02'],
+            ['IT08', 'Suture Kit', 'surgical', 'Basic wound closure kit', 0, 10, 14.50, 'SUP01'],
+            ['IT09', 'Blood Pressure Monitor', 'non-surgical', 'Digital upper-arm monitor', 25, 5, 24.00, 'SUP02'],
+            ['IT10', 'Sterile Drapes', 'surgical', 'Operating field drapes', 18, 25, 4.20, 'SUP01'],
+            ['IT11', 'Oxygen Masks', 'non-surgical', 'Adult oxygen mask with tubing', 90, 40, 3.10, 'SUP02'],
+            ['IT12', 'Forceps', 'surgical', 'Stainless tissue forceps', 60, 30, 7.60, 'SUP01'],
+            ['IT13', 'Urinary Catheter', 'non-surgical', 'Foley catheter 16Fr', 3, 15, 5.40, 'SUP02'],
+            ['IT14', 'Needle Holder', 'surgical', 'Mayo-Hegar needle holder 16cm', 22, 8, 11.90, 'SUP01'],
+            ['IT15', 'Wheelchair', 'non-surgical', 'Folding transit wheelchair', 4, 2, 95.00, 'SUP02'],
+            ['IT16', 'Chest Drain Kit', 'surgical', 'Tube thoracostomy kit', 0, 6, 32.00, 'SUP01'],
         ];
     }
 

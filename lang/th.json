@@ -301,6 +301,8 @@
     "Supplier": "ผู้จำหน่าย",
     "Surgical": "เวชภัณฑ์ผ่าตัด (Surgical)",
     "Non-surgical": "เวชภัณฑ์ทั่วไป (Non-surgical)",
+    "surgical": "เวชภัณฑ์ผ่าตัด",
+    "non-surgical": "เวชภัณฑ์ทั่วไป",
     "No pharmaceutical records yet.": "ยังไม่มีรายการยา",
     "No stock items yet.": "ยังไม่มีรายการเวชภัณฑ์",
     "Add the first one": "เพิ่มรายการแรก",

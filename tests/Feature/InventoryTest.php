@@ -83,23 +83,23 @@ class InventoryTest extends TestCase
 
     public function test_stock_page_filters_by_surgical_type(): void
     {
-        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Scalpel', 'ItemType' => 'Surgical', 'QtyInStock' => 30, 'ReorderLvl' => 5]);
-        CentralStock::create(['Item_No' => 'IT02', 'Name' => 'Bandage', 'ItemType' => 'NonSurgical', 'QtyInStock' => 80, 'ReorderLvl' => 20]);
+        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Scalpel', 'ItemType' => 'surgical', 'QtyInStock' => 30, 'ReorderLvl' => 5]);
+        CentralStock::create(['Item_No' => 'IT02', 'Name' => 'Bandage', 'ItemType' => 'non-surgical', 'QtyInStock' => 80, 'ReorderLvl' => 20]);
 
-        $this->get('/stock?type=Surgical')->assertOk()
+        $this->get('/stock?type=surgical')->assertOk()
             ->assertSee('Scalpel')->assertDontSee('Bandage');
 
-        $this->get('/stock?type=NonSurgical')->assertOk()
+        $this->get('/stock?type=non-surgical')->assertOk()
             ->assertSee('Bandage')->assertDontSee('Scalpel');
     }
 
     public function test_store_generates_next_id_and_logs_initial_movement(): void
     {
-        CentralStock::create(['Item_No' => 'IT07', 'Name' => 'Existing', 'ItemType' => 'Surgical', 'QtyInStock' => 1, 'ReorderLvl' => 1]);
+        CentralStock::create(['Item_No' => 'IT07', 'Name' => 'Existing', 'ItemType' => 'surgical', 'QtyInStock' => 1, 'ReorderLvl' => 1]);
 
         $response = $this->post('/stock', [
             'Name' => 'New Item',
-            'ItemType' => 'Surgical',
+            'ItemType' => 'surgical',
             'Description' => 'desc',
             'QtyInStock' => 25,
             'ReorderLvl' => 10,
@@ -113,7 +113,7 @@ class InventoryTest extends TestCase
 
     public function test_restock_increments_qty_and_creates_movement(): void
     {
-        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Gloves', 'ItemType' => 'Surgical', 'QtyInStock' => 10, 'ReorderLvl' => 50]);
+        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Gloves', 'ItemType' => 'surgical', 'QtyInStock' => 10, 'ReorderLvl' => 50]);
 
         $this->post('/stock/IT01/restock', ['quantity' => 40, 'note' => 'delivery'])
             ->assertRedirect();
@@ -124,7 +124,7 @@ class InventoryTest extends TestCase
 
     public function test_adjust_requires_note_and_decrements(): void
     {
-        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Gloves', 'ItemType' => 'Surgical', 'QtyInStock' => 10, 'ReorderLvl' => 5]);
+        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Gloves', 'ItemType' => 'surgical', 'QtyInStock' => 10, 'ReorderLvl' => 5]);
 
         $this->post('/stock/IT01/adjust', ['quantity' => 3])->assertSessionHasErrors('note');
 
@@ -137,7 +137,7 @@ class InventoryTest extends TestCase
 
     public function test_adjust_cannot_go_below_zero(): void
     {
-        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Gloves', 'ItemType' => 'Surgical', 'QtyInStock' => 2, 'ReorderLvl' => 5]);
+        CentralStock::create(['Item_No' => 'IT01', 'Name' => 'Gloves', 'ItemType' => 'surgical', 'QtyInStock' => 2, 'ReorderLvl' => 5]);
 
         $this->post('/stock/IT01/adjust', ['quantity' => 5, 'note' => 'damaged'])
             ->assertSessionHas('error');
