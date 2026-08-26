@@ -9,15 +9,25 @@ class BedSeeder extends Seeder
 {
     public function run(): void
     {
-        $beds = [];
+        // ลบเตียงเก่าแบบ B* ที่ไม่ตรงสเปคใหม่ และเตียงที่เลขไม่เริ่ม 101,201...
+        DB::table('Bed')->where('Bed_No', 'like', 'B%')->delete();
 
-        foreach (['WD01', 'WD02', 'WD03', 'WD04'] as $i => $ward) {
-            $beds[] = ['Bed_No' => "B{$i}01", 'Wd_No' => $ward, 'BedStatus' => 'Occupied'];
-            $beds[] = ['Bed_No' => "B{$i}02", 'Wd_No' => $ward, 'BedStatus' => 'Available'];
+        // ลบเตียงเก่าที่เลขไม่ตรงรูปแบบใหม่ (เช่น 500 แทน 501) เพื่อแก้ให้เริ่ม 101 ตามคำขอ
+        foreach (['WD01','WD02','WD03','WD04','WD05','WD06','WD07','WD08','WD09'] as $ward) {
+            $wardNum = (int) substr($ward, 2);
+            $base = $wardNum * 100; // 100, 200, ...
+            // ลบเตียงที่ลงท้ายด้วย 00 (เช่น 500) ซึ่งควรเริ่ม 501
+            DB::table('Bed')->where('Wd_No', $ward)->where('Bed_No', (string) $base)->delete();
         }
 
-        // วอร์ดใหม่: เลขเตียงตามวอร์ด เช่น WD05 -> 500-513, WD06 -> 600-613 ฯลฯ
-        $newWards = [
+        $beds = [];
+
+        // ทุกวอร์ดใช้เลขตามวอร์ด เริ่ม 101, 201, 501... ตามคำขอ: วอร์ด1 101-114
+        $allWards = [
+            'WD01' => 14,
+            'WD02' => 14,
+            'WD03' => 14,
+            'WD04' => 14,
             'WD05' => 14,
             'WD06' => 14,
             'WD07' => 14,
@@ -25,11 +35,11 @@ class BedSeeder extends Seeder
             'WD09' => 15,
         ];
 
-        foreach ($newWards as $ward => $count) {
-            $wardNum = (int) substr($ward, 2); // WD05 -> 5
-            $base = $wardNum * 100; // 500, 600, ...
-            for ($n = 0; $n < $count; $n++) {
-                $bedNo = (string) ($base + $n); // 500, 501, ...
+        foreach ($allWards as $ward => $count) {
+            $wardNum = (int) substr($ward, 2);
+            $base = $wardNum * 100; // 100, 200, ...
+            for ($n = 1; $n <= $count; $n++) {
+                $bedNo = (string) ($base + $n); // 101-114, 501-514, ...
                 $beds[] = ['Bed_No' => $bedNo, 'Wd_No' => $ward, 'BedStatus' => 'Available'];
             }
         }
