@@ -58,6 +58,11 @@ class MedicationOrderController extends Controller
             ]);
         }
 
+        // drop empty rows where no drug selected (left by JS template / user added extra rows)
+        $request->merge([
+            'drugs' => array_values(array_filter($request->input('drugs', []), fn ($r) => ! empty($r['Drug_No'] ?? null))),
+        ]);
+
         $data = $request->validate([
             'drugs' => ['required', 'array', 'min:1'],
             'drugs.*.Drug_No' => ['required', 'exists:Pharmaceutical,Drug_No'],

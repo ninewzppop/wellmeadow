@@ -331,7 +331,7 @@
                     <div data-row class="grid gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-12">
                         <div class="sm:col-span-5">
                             <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Drug') }} *</label>
-                            <select name="drugs[][Drug_No]" required data-row-drug
+                            <select name="drugs[__INDEX__][Drug_No]" required data-row-drug
                                     class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
                                 <option value="">—</option>
                                 @foreach ($drugs as $drug)
@@ -341,12 +341,12 @@
                         </div>
                         <div class="sm:col-span-2">
                             <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Units per day') }} *</label>
-                            <input type="number" name="drugs[][UnitsPerDay]" min="1" step="1" required
+                            <input type="number" name="drugs[__INDEX__][UnitsPerDay]" min="1" step="1" required
                                    class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
                         </div>
                         <div class="sm:col-span-3">
                             <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Administration method') }} *</label>
-                            <input type="text" name="drugs[][AdminMethod]" maxlength="30" required placeholder="{{ __('e.g. Oral, IV, IM') }}"
+                            <input type="text" name="drugs[__INDEX__][AdminMethod]" maxlength="30" required placeholder="{{ __('e.g. Oral, IV, IM') }}"
                                    class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
                         </div>
                         <div class="flex items-end gap-1 sm:col-span-2">
@@ -357,12 +357,12 @@
                         </div>
                         <div class="sm:col-span-6">
                             <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Start date') }} *</label>
-                            <input type="date" name="drugs[][StartDate]" value="{{ now()->toDateString() }}" required data-row-start
+                            <input type="date" name="drugs[__INDEX__][StartDate]" value="{{ now()->toDateString() }}" required data-row-start
                                    class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
                         </div>
                         <div class="sm:col-span-6">
                             <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Finish date') }} *</label>
-                            <input type="date" name="drugs[][FinishDate]" value="{{ now()->toDateString() }}" required data-row-finish
+                            <input type="date" name="drugs[__INDEX__][FinishDate]" value="{{ now()->toDateString() }}" required data-row-finish
                                    class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
                         </div>
                     </div>
@@ -434,20 +434,36 @@
             var conflictDrugs = JSON.parse(dialog.dataset.allergyDrugs || '[]');
             var conflictNames = JSON.parse(dialog.dataset.allergyNames || '[]');
 
+            function reindex() {
+                rowsWrap.querySelectorAll('[data-row]').forEach(function (row, idx) {
+                    row.querySelectorAll('select, input').forEach(function (el) {
+                        var name = el.getAttribute('name');
+                        if (name) el.setAttribute('name', name.replace(/drugs\[\d+\]/, 'drugs['+idx+']').replace('__INDEX__', idx));
+                    });
+                });
+            }
+
             function addRow(prefill) {
                 var frag = tmpl.content.cloneNode(true);
-                var row = frag.querySelector('[data-row]');
-                rowsWrap.appendChild(frag);
-                var newRow = rowsWrap.lastElementChild;
+                var html = frag.firstElementChild.outerHTML.replace(/__INDEX__/g, rowsWrap.children.length);
+                var temp = document.createElement('div');
+                temp.innerHTML = html;
+                var newRow = temp.firstElementChild;
+                rowsWrap.appendChild(newRow);
                 if (prefill) {
                     var sel = newRow.querySelector('[data-row-drug]');
                     if (prefill.Drug_No) sel.value = prefill.Drug_No;
-                    newRow.querySelector('input[name="drugs[][UnitsPerDay]"]').value = prefill.UnitsPerDay || '';
-                    newRow.querySelector('input[name="drugs[][AdminMethod]"]').value = prefill.AdminMethod || '';
+                    newRow.querySelector('[data-row-start]').closest('[data-row]').querySelectorAll('input').forEach(function(i){});
+                    // set by data attributes
+                    var unitsInput = newRow.querySelector('input[name*=\"[UnitsPerDay]\"]');
+                    if (unitsInput) unitsInput.value = prefill.UnitsPerDay || '';
+                    var methodInput = newRow.querySelector('input[name*=\"[AdminMethod]\"]');
+                    if (methodInput) methodInput.value = prefill.AdminMethod || '';
                     if (prefill.StartDate) newRow.querySelector('[data-row-start]').value = prefill.StartDate;
                     if (prefill.FinishDate) newRow.querySelector('[data-row-finish]').value = prefill.FinishDate;
                 }
                 bindRow(newRow);
+                reindex();
                 refresh();
             }
 
@@ -455,6 +471,7 @@
                 row.querySelector('[data-remove-row]').addEventListener('click', function () {
                     row.remove();
                     if (rowsWrap.children.length === 0) addRow();
+                    reindex();
                     refresh();
                 });
                 row.querySelectorAll('select, input').forEach(function (el) {
@@ -524,6 +541,25 @@
                         this.checked = false;
                     }
                 });
+            });
+
+            // strip empty rows before submit so they don't trigger required validation
+            form.addEventListener('submit', function () {
+                reindex();
+                var rows = rowsWrap.querySelectorAll('[data-row]');
+                var hasValid = false;
+                rows.forEach(function(r){ if (r.querySelector('[data-row-drug]').value) hasValid = true; });
+                if (!hasValid) return;
+                rows.forEach(function(r){
+                    if (!r.querySelector('[data-row-drug]').value) {
+                        r.querySelectorAll('select, input').forEach(function(el){
+                            el.removeAttribute('name');
+                            el.removeAttribute('required');
+                        });
+                        r.style.display = 'none';
+                    }
+                });
+                reindex();
             });
 
             // init
