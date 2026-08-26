@@ -122,9 +122,9 @@
                                             <button type="button"
                                                     onclick="document.getElementById('med-modal-{{ $appt->Appt_No }}').showModal()"
                                                     @disabled(! $appt->patient)
-                                                    title="{{ $appt->patient ? __('Dispense medication and complete the visit') : __('This appointment has no linked patient.') }}"
+                                                    title="{{ $appt->patient ? __('Order medication') : __('This appointment has no linked patient.') }}"
                                                     class="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white enabled:hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40">
-                                                {{ __('Dispense medication') }}
+                                                {{ __('Order medication') }}
                                             </button>
                                             <button type="button"
                                                     onclick="document.getElementById('admit-modal-{{ $appt->Appt_No }}').showModal()"
@@ -198,22 +198,22 @@
                 ->map(fn ($a) => $a->Allergy_Name ?: $a->drug?->Name)
                 ->filter()
                 ->implode(', ') ?? '';
+            $historyMeds = $appt->patient?->medications->sortByDesc('StartDate')->take(20) ?? collect();
         @endphp
 
-        {{-- a) Dispense medication --}}
+        {{-- a) Order medication (multi-drug) --}}
         <dialog id="med-modal-{{ $appt->Appt_No }}"
-                data-allergy-check
-                class="w-full max-w-lg rounded-2xl p-0 backdrop:bg-slate-900/50">
-            <form method="POST" action="{{ route('rooms.medicate', [$room, $appt]) }}"
-                  data-allergy-drugs="{{ json_encode($allergyDrugNos) }}"
-                  data-allergy-names="{{ json_encode($allergyNames->map(fn ($n) => mb_strtolower($n))) }}"
-                  class="p-6">
+                data-order-modal
+                data-allergy-drugs="{{ json_encode($allergyDrugNos) }}"
+                data-allergy-names="{{ json_encode($allergyNames->map(fn ($n) => mb_strtolower($n))) }}"
+                class="w-full max-w-4xl rounded-2xl p-0 backdrop:bg-slate-900/50">
+            <form method="POST" action="{{ route('rooms.medication-order.store', [$room, $appt]) }}" class="flex max-h-[90vh] flex-col">
                 @csrf
                 <input type="hidden" name="date" value="{{ $date->toDateString() }}">
 
-                <div class="mb-4 flex items-start justify-between gap-4">
+                <div class="flex items-start justify-between gap-4 border-b border-slate-100 p-6 pb-4">
                     <div>
-                        <h3 class="text-base font-bold text-slate-900">{{ __('Dispense medication') }}</h3>
+                        <h3 class="text-base font-bold text-slate-900">{{ __('Order medication') }}</h3>
                         <p class="mt-0.5 text-xs text-slate-500">
                             {{ $appt->patient?->full_name }} · {{ __('HN') }} {{ $appt->patient?->Pt_No }}
                         </p>
@@ -223,63 +223,137 @@
                             aria-label="{{ __('Close') }}">&times;</button>
                 </div>
 
-                <div data-allergy-warning class="mb-4 hidden rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
-                    <p class="font-bold">⚠️ {{ __('Allergy warning') }}</p>
-                    <p class="mt-1">
-                        {{ __('The selected drug matches a recorded allergy for this patient (:list). Confirm below to dispense anyway.', ['list' => $allergenSummary]) }}
-                    </p>
-                    <label class="mt-2 flex items-center gap-2 font-medium">
-                        <input type="checkbox" name="override_allergy" value="1" data-allergy-override
-                               class="h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-500">
-                        {{ __('I confirm: dispense despite recorded allergy') }}
-                    </label>
+                <div class="grid flex-1 gap-0 overflow-hidden lg:grid-cols-5">
+                    {{-- Left: medication history --}}
+                    <div class="flex flex-col overflow-hidden border-b bg-slate-50 lg:col-span-2 lg:border-b-0 lg:border-r">
+                        <div class="border-b border-slate-200 px-4 py-3">
+                            <h4 class="text-xs font-bold uppercase tracking-wide text-slate-600">{{ __('Medication history') }}</h4>
+                            <p class="mt-0.5 text-[11px] text-slate-400">{{ __('Tick to copy into the order on the right. You can edit before sending.') }}</p>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-3">
+                            @if ($historyMeds->isEmpty())
+                                <p class="py-8 text-center text-xs text-slate-400">{{ __('No medication history for this patient.') }}</p>
+                            @else
+                                <div class="space-y-2">
+                                    @foreach ($historyMeds as $hm)
+                                        <label class="flex cursor-pointer items-start gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 hover:border-blue-200 hover:bg-blue-50/50">
+                                            <input type="checkbox" class="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600"
+                                                   data-history-check
+                                                   data-drug-no="{{ $hm->Drug_No }}"
+                                                   data-drug-name="{{ $hm->drug?->Name ?? '' }}"
+                                                   data-units="{{ $hm->UnitsPerDay }}"
+                                                   data-method="{{ $hm->AdminMethod }}"
+                                                   data-start="{{ $hm->StartDate?->format('Y-m-d') }}"
+                                                   data-finish="{{ $hm->FinishDate?->format('Y-m-d') }}">
+                                            <span class="min-w-0 flex-1">
+                                                <span class="block text-xs font-semibold text-slate-800">{{ $hm->drug?->Name ?? $hm->Drug_No }}</span>
+                                                <span class="block text-[11px] text-slate-500">{{ $hm->UnitsPerDay }}/{{ __('day') }} · {{ $hm->AdminMethod }} · {{ $hm->StartDate?->format('d/m/Y') }} → {{ $hm->FinishDate?->format('d/m/Y') }}</span>
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Right: order rows --}}
+                    <div class="flex flex-col overflow-hidden lg:col-span-3">
+                        <div class="flex-1 overflow-y-auto p-4">
+                            {{-- Apply same dates --}}
+                            <label class="mb-3 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2">
+                                <input type="checkbox" data-apply-same-dates class="h-4 w-4 rounded border-blue-300 text-blue-600">
+                                <span class="text-xs font-medium text-blue-800">{{ __('Apply same dates to all drugs') }}</span>
+                            </label>
+                            <div data-sync-dates-row class="mb-4 hidden grid grid-cols-2 gap-3 rounded-xl border border-blue-200 bg-blue-50/50 p-3">
+                                <div>
+                                    <label class="mb-1 block text-[11px] font-medium text-blue-700">{{ __('Start date') }} *</label>
+                                    <input type="date" data-sync-start value="{{ now()->toDateString() }}"
+                                           class="w-full rounded-lg border border-blue-200 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="mb-1 block text-[11px] font-medium text-blue-700">{{ __('Finish date') }} *</label>
+                                    <input type="date" data-sync-finish
+                                           class="w-full rounded-lg border border-blue-200 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                                </div>
+                            </div>
+
+                            <div data-allergy-warning class="mb-4 hidden rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
+                                <p class="font-bold">⚠️ {{ __('Allergy warning') }}</p>
+                                <p class="mt-1">{{ __('The selected drug matches a recorded allergy for this patient (:list). Confirm below to dispense anyway.', ['list' => $allergenSummary]) }}</p>
+                                <label class="mt-2 flex items-center gap-2 font-medium">
+                                    <input type="checkbox" name="override_allergy" value="1" data-allergy-override
+                                           class="h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-500">
+                                    {{ __('I confirm: dispense despite recorded allergy') }}
+                                </label>
+                            </div>
+
+                            <div data-rows class="space-y-3"></div>
+
+                            <button type="button" data-add-row
+                                    class="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-slate-300 py-2.5 text-xs font-semibold text-slate-600 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700">
+                                <span class="text-sm">+</span> {{ __('Add another drug') }}
+                            </button>
+
+                            <div data-summary class="mt-4 hidden rounded-xl bg-slate-900 px-4 py-3 text-xs text-white">
+                                <p class="font-semibold">{{ __('Order summary') }}</p>
+                                <ul data-summary-list class="mt-1.5 list-inside list-disc space-y-0.5 text-slate-300"></ul>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-2 border-t border-slate-100 p-4">
+                            <button type="submit" formmethod="dialog" formnovalidate
+                                    class="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100">
+                                {{ __('Cancel') }}
+                            </button>
+                            <button type="submit" data-allergy-submit
+                                    class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40">
+                                {{ __('Send to dispensing queue') }}
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="sm:col-span-2">
-                        <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Drug') }} *</label>
-                        <select name="Drug_No" required data-allergy-drug-select
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                            <option value="">—</option>
-                            @foreach ($drugs as $drug)
-                                <option value="{{ $drug->Drug_No }}" data-name="{{ $drug->Name }}">
-                                    {{ $drug->Name }} ({{ $drug->Drug_No }})
-                                </option>
-                            @endforeach
-                        </select>
+                {{-- Row template --}}
+                <template data-row-template>
+                    <div data-row class="grid gap-2 rounded-xl border border-slate-200 bg-white p-3 sm:grid-cols-12">
+                        <div class="sm:col-span-5">
+                            <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Drug') }} *</label>
+                            <select name="drugs[][Drug_No]" required data-row-drug
+                                    class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                                <option value="">—</option>
+                                @foreach ($drugs as $drug)
+                                    <option value="{{ $drug->Drug_No }}" data-name="{{ $drug->Name }}">{{ $drug->Name }} ({{ $drug->Drug_No }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Units per day') }} *</label>
+                            <input type="number" name="drugs[][UnitsPerDay]" min="1" step="1" required
+                                   class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div class="sm:col-span-3">
+                            <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Administration method') }} *</label>
+                            <input type="text" name="drugs[][AdminMethod]" maxlength="30" required placeholder="{{ __('e.g. Oral, IV, IM') }}"
+                                   class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div class="flex items-end gap-1 sm:col-span-2">
+                            <button type="button" data-remove-row title="{{ __('Remove') }}"
+                                    class="ml-auto rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                            </button>
+                        </div>
+                        <div class="sm:col-span-6">
+                            <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Start date') }} *</label>
+                            <input type="date" name="drugs[][StartDate]" value="{{ now()->toDateString() }}" required data-row-start
+                                   class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                        </div>
+                        <div class="sm:col-span-6">
+                            <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Finish date') }} *</label>
+                            <input type="date" name="drugs[][FinishDate]" required data-row-finish
+                                   class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
+                        </div>
                     </div>
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Units per day') }} *</label>
-                        <input type="number" name="UnitsPerDay" min="1" step="1" required
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Administration method') }} *</label>
-                        <input type="text" name="AdminMethod" maxlength="30" required placeholder="{{ __('e.g. Oral, IV, IM') }}"
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Start date') }} *</label>
-                        <input type="date" name="StartDate" value="{{ now()->toDateString() }}" required
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Finish date') }} *</label>
-                        <input type="date" name="FinishDate" required
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end gap-2">
-                    <button type="submit" formmethod="dialog" formnovalidate
-                            class="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100">
-                        {{ __('Cancel') }}
-                    </button>
-                    <button type="submit" data-allergy-submit
-                            class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40">
-                        {{ __('Save & complete visit') }}
-                    </button>
-                </div>
+                </template>
             </form>
         </dialog>
 
@@ -329,35 +403,125 @@
 
 @push('scripts')
     <script>
-        document.querySelectorAll('dialog[data-allergy-check]').forEach(function (dialog) {
+        document.querySelectorAll('dialog[data-order-modal]').forEach(function (dialog) {
             var form = dialog.querySelector('form');
-            var select = form.querySelector('[data-allergy-drug-select]');
+            var rowsWrap = form.querySelector('[data-rows]');
+            var tmpl = form.querySelector('[data-row-template]');
+            var addBtn = form.querySelector('[data-add-row]');
+            var applyCheck = form.querySelector('[data-apply-same-dates]');
+            var syncRow = form.querySelector('[data-sync-dates-row]');
+            var syncStart = form.querySelector('[data-sync-start]');
+            var syncFinish = form.querySelector('[data-sync-finish]');
             var warning = form.querySelector('[data-allergy-warning]');
             var overrideBox = form.querySelector('[data-allergy-override]');
             var submit = form.querySelector('[data-allergy-submit]');
+            var summary = form.querySelector('[data-summary]');
+            var summaryList = form.querySelector('[data-summary-list]');
 
-            var conflictDrugs = JSON.parse(form.dataset.allergyDrugs || '[]');
-            var conflictNames = JSON.parse(form.dataset.allergyNames || '[]');
+            var conflictDrugs = JSON.parse(dialog.dataset.allergyDrugs || '[]');
+            var conflictNames = JSON.parse(dialog.dataset.allergyNames || '[]');
 
-            function update() {
-                var option = select.selectedOptions[0];
-                var drugNo = select.value;
-                var drugName = option ? (option.dataset.name || '').trim().toLowerCase() : '';
-                var conflict = drugNo !== '' && (
-                    conflictDrugs.indexOf(drugNo) !== -1 ||
-                    conflictNames.indexOf(drugName) !== -1
-                );
-
-                warning.classList.toggle('hidden', !conflict);
-                overrideBox.disabled = !conflict;
-                submit.disabled = conflict && !overrideBox.checked;
+            function addRow(prefill) {
+                var frag = tmpl.content.cloneNode(true);
+                var row = frag.querySelector('[data-row]');
+                rowsWrap.appendChild(frag);
+                var newRow = rowsWrap.lastElementChild;
+                if (prefill) {
+                    var sel = newRow.querySelector('[data-row-drug]');
+                    if (prefill.Drug_No) sel.value = prefill.Drug_No;
+                    newRow.querySelector('input[name="drugs[][UnitsPerDay]"]').value = prefill.UnitsPerDay || '';
+                    newRow.querySelector('input[name="drugs[][AdminMethod]"]').value = prefill.AdminMethod || '';
+                    if (prefill.StartDate) newRow.querySelector('[data-row-start]').value = prefill.StartDate;
+                    if (prefill.FinishDate) newRow.querySelector('[data-row-finish]').value = prefill.FinishDate;
+                }
+                bindRow(newRow);
+                refresh();
             }
 
-            select.addEventListener('change', update);
-            if (overrideBox) {
-                overrideBox.addEventListener('change', update);
+            function bindRow(row) {
+                row.querySelector('[data-remove-row]').addEventListener('click', function () {
+                    row.remove();
+                    if (rowsWrap.children.length === 0) addRow();
+                    refresh();
+                });
+                row.querySelectorAll('select, input').forEach(function (el) {
+                    el.addEventListener('change', refresh);
+                    el.addEventListener('input', refresh);
+                });
             }
-            update();
+
+            function refresh() {
+                // sync dates
+                if (applyCheck.checked) {
+                    var s = syncStart.value, f = syncFinish.value;
+                    rowsWrap.querySelectorAll('[data-row-start]').forEach(function (el) { if (s) el.value = s; });
+                    rowsWrap.querySelectorAll('[data-row-finish]').forEach(function (el) { if (f) el.value = f; });
+                }
+                // allergy
+                var hasConflict = false;
+                rowsWrap.querySelectorAll('[data-row-drug]').forEach(function (sel) {
+                    var opt = sel.selectedOptions[0];
+                    var drugNo = sel.value;
+                    var drugName = opt ? (opt.dataset.name || '').trim().toLowerCase() : '';
+                    if (drugNo !== '' && (conflictDrugs.indexOf(drugNo) !== -1 || conflictNames.indexOf(drugName) !== -1)) {
+                        hasConflict = true;
+                    }
+                });
+                warning.classList.toggle('hidden', !hasConflict);
+                if (overrideBox) {
+                    overrideBox.disabled = !hasConflict;
+                    submit.disabled = hasConflict && !overrideBox.checked;
+                }
+                // summary
+                var items = [];
+                rowsWrap.querySelectorAll('[data-row]').forEach(function (row) {
+                    var sel = row.querySelector('[data-row-drug]');
+                    var opt = sel.selectedOptions[0];
+                    var name = opt && opt.value ? (opt.dataset.name || opt.textContent.trim()) : null;
+                    if (name) items.push(name);
+                });
+                if (items.length) {
+                    summary.classList.remove('hidden');
+                    summaryList.innerHTML = items.map(function (n) { return '<li>' + n + '</li>'; }).join('');
+                } else {
+                    summary.classList.add('hidden');
+                }
+            }
+
+            // apply-same-dates toggle
+            applyCheck.addEventListener('change', function () {
+                syncRow.classList.toggle('hidden', !this.checked);
+                refresh();
+            });
+            if (syncStart) syncStart.addEventListener('change', refresh);
+            if (syncFinish) syncFinish.addEventListener('change', refresh);
+            if (overrideBox) overrideBox.addEventListener('change', refresh);
+
+            // history checkboxes
+            dialog.querySelectorAll('[data-history-check]').forEach(function (cb) {
+                cb.addEventListener('change', function () {
+                    if (this.checked) {
+                        addRow({
+                            Drug_No: this.dataset.drugNo,
+                            UnitsPerDay: this.dataset.units,
+                            AdminMethod: this.dataset.method,
+                            StartDate: this.dataset.start,
+                            FinishDate: this.dataset.finish
+                        });
+                        this.checked = false;
+                    }
+                });
+            });
+
+            // init
+            addRow();
+            if (applyCheck) syncRow.classList.toggle('hidden', !applyCheck.checked);
+            addBtn.addEventListener('click', function () { addRow(); });
+
+            // re-init on dialog open (ensure one row)
+            dialog.addEventListener('close', function () {
+                // keep rows for next open; do not clear
+            });
         });
     </script>
 @endpush

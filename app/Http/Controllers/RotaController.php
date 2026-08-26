@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Stf;
 use App\Models\StfRota;
 use App\Models\Wd;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -104,7 +105,7 @@ class RotaController extends Controller
 
         return __(':staff already has an assignment in the week beginning :date. Please edit or cancel.', [
             'staff' => $staff?->full_name ?? $stfNo,
-            'date' => \Carbon\Carbon::parse($wkBegin)->format('d M Y'),
+            'date' => Carbon::parse($wkBegin)->format('d M Y'),
         ]);
     }
 

@@ -29,6 +29,8 @@ Source of truth: `hospital.sql` (converted to migrations on 2026-08-19). 23 tabl
 | Item request line | `Itemrequest` | (Wd_Req_No, Item_No) PK | seeded |
 | Drug request line | `Drugrequest` | (Wd_Req_No, Drug_No) PK | seeded |
 | Allergy | `PatientAllergy` | Allergy_No PK, Pt_No FK, Drug_No FK, Rec_Stf_No FK | seeded |
+| Medication order | `MedicationOrder` (**new**) | Order_No PK `MO{n}` un-padded, Pt_No FK, Stf_No FK (prescriber), Appt_No FK, status {pending,dispensed,cancelled}, OrderedAt, PaidAt, DispensedAt, CancelledAt, CancelReason | create via room modal → pending in dispensing queue → dispensed (copies to Medications) or cancelled |
+| Medication order item | `MedicationOrderItem` (**new**) | id AI PK, Order_No FK → MedicationOrder, Drug_No FK, UnitsPerDay, AdminMethod, StartDate, FinishDate | sub-rows of an order; created with header, deleted by cascade |
 
 ## Relationships (site-relevant)
 
@@ -280,3 +282,47 @@ schema additions.
 | Restock/adjust | transaction: UPDATE QtyInStock + INSERT StockMovement | Moved_By = auth user |
 | Movement history | StockMovement by Drug_No/Item_No, newest first | insert-only |
 | Schema | ADD `Pharmaceutical.ExpiryDate`; CREATE `StockMovement` | only approved changes |
+
+---
+
+# Medication ordering queue
+
+Added 2026-08-26 (ADR-0008). Header+items order queue separating "ordered" from "dispensed history".
+
+## Entities
+
+| Entity | Table | Key attributes | Lifecycle |
+|---|---|---|---|
+| Medication order | `MedicationOrder` (**new**) | Order_No PK `MO{n}`, Pt_No FK, Stf_No FK, Appt_No FK, status {pending,dispensed,cancelled}, OrderedAt/PaidAt/DispensedAt/CancelledAt, CancelReason | created in room modal (pending) → pharmacy confirms → dispensed (copies items to `Medications`) or cancelled (reason required); pending rows form the queue |
+| Medication order item | `MedicationOrderItem` (**new**) | id AI PK, Order_No FK CASCADE, Drug_No FK, UnitsPerDay, AdminMethod, StartDate, FinishDate | one per drug line; created with header |
+
+## Value objects
+
+- **Order status**: `pending` (in queue), `dispensed` (history written, leaves queue), `cancelled` (reason stored, leaves queue). No `Ready` state — single combined confirm per Q2.
+- **Drug row**: a line's `Drug_No`/dose/method/dates; history-copy uses current selection, validated `FinishDate ≥ StartDate`.
+
+## Relationships
+
+- MedicationOrder N—1 Patient, N—1 Stf (prescriber = appointment consultant), N—1 Appointment
+- MedicationOrder 1—N MedicationOrderItem CASCADE
+- MedicationOrderItem N—1 Pharmaceutical (drug)
+- Prior dispensed history lives in `Medications` (existing) — copied to, not linked from, on confirm.
+
+## Invariants
+
+1. Every order has ≥ 1 item; FinishDate ≥ StartDate and UnitsPerDay ≥ 1 per item.
+2. An order is pending until exactly one of: confirm (copies each item to `Medications` + sets PaidAt/DispensedAt) or cancel (sets CancelledAt/CancelReason); terminal states never re-enter the queue.
+3. Allergy check is aggregated across all items (Drug_No OR name match against `PatientAllergy`); a pending conflict blocks saving without explicit `override_allergy`.
+4. The pharmacy queue is `status = pending` ordered by `OrderedAt` ascending; finished/cancelled orders are absent.
+5. Order_No `MO{n}` generation is server-side, un-padded increment.
+
+## Persistence map
+
+| Concern | Storage/Query | Notes |
+|---|---|---|
+| Doctor ordering (modal) | Transaction: INSERT MedicationOrder + N MedicationOrderItem | history panel from `Patient.medications`; sync-dates helper is client-only |
+| Pharmacy queue | `MedicationOrder` WHERE status=pending ORDER BY OrderedAt | index on status |
+| Pharmacy detail | `MedicationOrder` + items.drug + patient.allergies.drug + prescriber | allergy warning display-only |
+| Confirm (single button) | Transaction: N INSERT `Medications` (via existing `generateId('Medications','Med_No','M')`) + UPDATE order dispensed/PaidAt/DispensedAt | existing `Medications` schema untouched |
+| Cancel | UPDATE order cancelled/CancelledAt/CancelReason (reason required) | leaves queue; no history write |
+| Schema | CREATE `MedicationOrder`, `MedicationOrderItem` — no ALTER of existing tables | owner-approved via grilling Q1 |

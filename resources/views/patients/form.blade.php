@@ -29,18 +29,13 @@
                 {{-- Main patient details --}}
                 <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:col-span-2">
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">
-                            {{ __('Patient No.') }} <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="Pt_No" value="{{ old('Pt_No', $patient->Pt_No) }}" maxlength="10"
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                               required @if($patient->exists) readonly @endif>
-                        @if($patient->exists)
-                            <p class="mt-1 text-xs text-slate-400">{{ __('Cannot be changed after creation') }}</p>
-                        @endif
-                        @error('Pt_No')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
+                        <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Patient No.') }}</label>
+                        <input type="text" value="{{ $patient->exists ? $patient->Pt_No : $nextPtNo }}" disabled
+                               placeholder="{{ __('Auto-generated') }}"
+                               class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
+                        <p class="mt-1 text-xs text-slate-400">
+                            {{ $patient->exists ? __('Cannot be changed after creation') : __('Generated automatically when saved') }}
+                        </p>
                     </div>
 
                     <div>

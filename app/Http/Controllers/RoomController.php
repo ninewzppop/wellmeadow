@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Appointment;
 use App\Models\InPatient;
-use App\Models\Medications;
 use App\Models\Patient;
 use App\Models\Pharmaceutical;
 use App\Models\Room;
@@ -53,7 +52,7 @@ class RoomController extends Controller
     {
         $date = $this->resolveDate($request);
 
-        $queue = Appointment::with(['patient.allergies.drug', 'consultant'])
+        $queue = Appointment::with(['patient.allergies.drug', 'patient.medications.drug', 'consultant'])
             ->where('Room_No', $room->Room_No)
             ->whereDate('ApptDate', $date->toDateString())
             ->active()
@@ -109,62 +108,6 @@ class RoomController extends Controller
         );
     }
 
-    public function medicate(Request $request, Room $room, Appointment $appointment): RedirectResponse
-    {
-        $this->assertSameRoom($room, $appointment);
-
-        if (! $this->isInConsultation($appointment)) {
-            return $this->backToQueue($request, $room)->withErrors([
-                'queue' => __('Only appointments currently in consultation can be completed.'),
-            ]);
-        }
-
-        if (! $appointment->patient) {
-            return $this->backToQueue($request, $room)->withErrors([
-                'queue' => __('This appointment has no linked patient.'),
-            ]);
-        }
-
-        $data = $request->validate([
-            'Drug_No' => ['required', 'exists:Pharmaceutical,Drug_No'],
-            'UnitsPerDay' => ['required', 'integer', 'min:1'],
-            'AdminMethod' => ['required', 'string', 'max:30'],
-            'StartDate' => ['required', 'date'],
-            'FinishDate' => ['required', 'date', 'after_or_equal:StartDate'],
-        ]);
-
-        $drug = Pharmaceutical::findOrFail($data['Drug_No']);
-        $conflicts = $this->allergyConflicts($appointment->patient, $drug);
-
-        if ($conflicts->isNotEmpty() && ! $request->boolean('override_allergy')) {
-            return $this->backToQueue($request, $room)
-                ->withErrors(['Drug_No' => __('Allergy conflict: :detail. Tick the confirmation box to dispense anyway.', [
-                    'detail' => $conflicts->map(fn ($a) => $a->Allergy_Name ?: $a->drug?->Name ?: $a->Drug_No)->implode(', '),
-                ])])
-                ->withInput();
-        }
-
-        DB::transaction(function () use ($appointment, $data) {
-            Medications::create([
-                'Med_No' => $this->generateId('Medications', 'Med_No', 'M'),
-                'Pt_No' => $appointment->Pt_No,
-                'Stf_No' => $appointment->Consult_Stf_No,
-                'Drug_No' => $data['Drug_No'],
-                'UnitsPerDay' => $data['UnitsPerDay'],
-                'AdminMethod' => $data['AdminMethod'],
-                'StartDate' => $data['StartDate'],
-                'FinishDate' => $data['FinishDate'],
-            ]);
-
-            $appointment->update(['status' => Appointment::STATUS_COMPLETED_MEDICATION]);
-        });
-
-        return $this->backToQueue($request, $room)->with(
-            'status',
-            __('Medication dispensed for :name. Visit completed.', ['name' => $appointment->patient?->full_name ?? $appointment->Appt_No]),
-        );
-    }
-
     public function admit(Request $request, Room $room, Appointment $appointment): RedirectResponse
     {
         $this->assertSameRoom($room, $appointment);
@@ -187,7 +130,7 @@ class RoomController extends Controller
 
         DB::transaction(function () use ($appointment, $data) {
             InPatient::create([
-                'In_Pt_No' => $this->generateId('InPatient', 'In_Pt_No', 'IP'),
+                'In_Pt_No' => InPatient::nextNo(),
                 'Pt_No' => $appointment->Pt_No,
                 'Bed_No' => null,
                 'DateWaitList' => Carbon::today()->toDateString(),

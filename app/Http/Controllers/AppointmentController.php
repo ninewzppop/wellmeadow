@@ -78,13 +78,14 @@ class AppointmentController extends Controller
             'consultants' => $consultants,
             'rooms' => $rooms,
             'statuses' => $this->formStatuses(null),
+            'nextApptNo' => $this->nextApptNo(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateAppointment($request);
-        $data['Appt_No'] = $this->generateId('Appointment', 'Appt_No', 'A');
+        $data['Appt_No'] = $this->nextApptNo();
 
         Appointment::create($data);
 
@@ -191,5 +192,15 @@ class AppointmentController extends Controller
             'Room_No' => ['required', 'exists:Room,Room_No'],
             'status' => ['required', 'string', 'max:20', Rule::in($allowedStatuses)],
         ]);
+    }
+
+    protected function nextApptNo(): string
+    {
+        $max = Appointment::where('Appt_No', 'like', 'A%')
+            ->pluck('Appt_No')
+            ->map(fn (string $apptNo) => (int) substr($apptNo, 1))
+            ->max();
+
+        return 'A'.($max + 1);
     }
 }

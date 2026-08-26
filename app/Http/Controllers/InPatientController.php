@@ -72,12 +72,14 @@ class InPatientController extends Controller
             'patients' => $patients,
             'beds' => $beds,
             'wards' => $wards,
+            'nextInPtNo' => InPatient::nextNo(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateInPatient($request);
+        $data['In_Pt_No'] = InPatient::nextNo();
 
         $inPatient = InPatient::create($data);
 
@@ -112,7 +114,7 @@ class InPatientController extends Controller
     public function update(Request $request, InPatient $inPatient): RedirectResponse
     {
         $oldBedNo = $inPatient->Bed_No;
-        $data = $this->validateInPatient($request, $inPatient->In_Pt_No);
+        $data = $this->validateInPatient($request);
 
         $inPatient->update($data);
 
@@ -143,15 +145,9 @@ class InPatientController extends Controller
             ->with('status', __('Deleted admission :no.', ['no' => $no]));
     }
 
-    protected function validateInPatient(Request $request, ?string $ignoreInPtNo = null): array
+    protected function validateInPatient(Request $request): array
     {
         return $request->validate([
-            'In_Pt_No' => [
-                'required',
-                'string',
-                'max:10',
-                $ignoreInPtNo ? 'unique:InPatient,In_Pt_No,'.$ignoreInPtNo.',In_Pt_No' : 'unique:InPatient,In_Pt_No',
-            ],
             'Pt_No' => ['required', 'exists:Patient,Pt_No'],
             'Bed_No' => ['nullable', 'exists:Bed,Bed_No'],
             'DateWaitList' => ['nullable', 'date'],

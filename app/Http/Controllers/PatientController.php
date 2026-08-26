@@ -38,12 +38,14 @@ class PatientController extends Controller
         return view('patients.form', [
             'patient' => new Patient,
             'doctors' => $doctors,
+            'nextPtNo' => $this->nextPtNo(),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validatePatient($request);
+        $data['Pt_No'] = $this->nextPtNo();
 
         $patient = Patient::create($data);
 
@@ -75,7 +77,7 @@ class PatientController extends Controller
 
     public function update(Request $request, Patient $patient): RedirectResponse
     {
-        $data = $this->validatePatient($request, $patient->Pt_No);
+        $data = $this->validatePatient($request);
 
         $patient->update($data);
 
@@ -93,15 +95,9 @@ class PatientController extends Controller
             ->with('status', __('Deleted patient :name.', ['name' => $name]));
     }
 
-    protected function validatePatient(Request $request, ?string $ignorePtNo = null): array
+    protected function validatePatient(Request $request): array
     {
         return $request->validate([
-            'Pt_No' => [
-                'required',
-                'string',
-                'max:10',
-                $ignorePtNo ? 'unique:Patient,Pt_No,' . $ignorePtNo . ',Pt_No' : 'unique:Patient,Pt_No',
-            ],
             'FirstName' => ['required', 'string', 'max:50'],
             'LastName' => ['required', 'string', 'max:50'],
             'Address' => ['nullable', 'string', 'max:150'],
@@ -112,5 +108,15 @@ class PatientController extends Controller
             'DateReg' => ['nullable', 'date'],
             'Clinic_No' => ['nullable', 'exists:LocalDr,Clinic_No'],
         ]);
+    }
+
+    protected function nextPtNo(): string
+    {
+        $max = Patient::where('Pt_No', 'like', 'PT%')
+            ->pluck('Pt_No')
+            ->map(fn (string $ptNo) => (int) substr($ptNo, 2))
+            ->max();
+
+        return 'PT'.($max + 1);
     }
 }

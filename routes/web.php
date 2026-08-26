@@ -6,15 +6,16 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InPatientController;
 use App\Http\Controllers\LanguageController;
-use App\Http\Controllers\PharmaceuticalController;
 use App\Http\Controllers\LocalDoctorController;
+use App\Http\Controllers\MedicationOrderController;
 use App\Http\Controllers\PatientController;
+use App\Http\Controllers\PharmaceuticalController;
 use App\Http\Controllers\PlaceholderController;
-use App\Http\Controllers\RotaController;
 use App\Http\Controllers\RoomController;
-use App\Http\Controllers\StockController;
+use App\Http\Controllers\RotaController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffSearchController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WardController;
 use App\Http\Controllers\WardReportController;
@@ -43,12 +44,15 @@ Route::middleware('auth')->group(function () {
     Route::resource('patients', PatientController::class);
     Route::resource('appointments', AppointmentController::class);
     Route::resource('in-patients', InPatientController::class);
-    Route::get('/medications', [PlaceholderController::class, 'show'])->defaults('page', 'medications')->name('medications.index');
+    Route::get('/medications', [MedicationOrderController::class, 'index'])->name('medications.index');
+    Route::get('/medications/{order}', [MedicationOrderController::class, 'show'])->name('medications.show');
     Route::resource('allergies', AllergyController::class)->except(['show']);
     Route::get('/rooms', [RoomController::class, 'index'])->name('rooms.index');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
     Route::post('/rooms/{room}/appointments/{appointment}/start', [RoomController::class, 'start'])->name('rooms.start');
-    Route::post('/rooms/{room}/appointments/{appointment}/medicate', [RoomController::class, 'medicate'])->name('rooms.medicate');
+    Route::post('/rooms/{room}/appointments/{appointment}/medication-order', [MedicationOrderController::class, 'store'])->name('rooms.medication-order.store');
+    Route::post('/medications/{order}/confirm', [MedicationOrderController::class, 'confirm'])->name('medications.confirm');
+    Route::post('/medications/{order}/cancel', [MedicationOrderController::class, 'cancel'])->name('medications.cancel');
     Route::post('/rooms/{room}/appointments/{appointment}/admit', [RoomController::class, 'admit'])->name('rooms.admit');
     Route::post('/rooms/{room}/appointments/{appointment}/complete', [RoomController::class, 'complete'])->name('rooms.complete');
     Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
@@ -77,8 +81,8 @@ Route::middleware('auth')->group(function () {
     Route::redirect('/allocations', '/rota');
     Route::resource('suppliers', SupplierController::class);
     Route::resource('local-doctors', LocalDoctorController::class)->parameters([
-    'local-doctors' => 'doctor',
-]);
+        'local-doctors' => 'doctor',
+    ]);
 
     Route::middleware('admin')->group(function () {
         Route::get('/users', [PlaceholderController::class, 'show'])->defaults('page', 'users')->name('users.index');

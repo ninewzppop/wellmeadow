@@ -37,4 +37,15 @@ class InPatient extends Model
     {
         return $this->belongsTo(Bed::class, 'Bed_No', 'Bed_No');
     }
+
+    public static function nextNo(): string
+    {
+        $max = static::query()
+            ->where('In_Pt_No', 'like', 'IP%')
+            ->pluck('In_Pt_No')
+            ->map(fn (string $inPtNo) => (int) substr($inPtNo, 2))
+            ->max();
+
+        return 'IP'.($max + 1);
+    }
 }

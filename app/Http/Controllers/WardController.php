@@ -31,14 +31,13 @@ class WardController extends Controller
         $staff = Stf::where('Alloc_Wd_No', $ward->Wd_No)
             ->orderBy('LastName')
             ->get(['Stf_No', 'FirstName', 'LastName']);
- 
 
         return view('wards.show', [
-            'ward'      => $ward,
-            'beds'      => $beds,
+            'ward' => $ward,
+            'beds' => $beds,
             'available' => $available,
-            'occupied'  => $occupied,
-            'staff'     => $staff,
-            ]);
+            'occupied' => $occupied,
+            'staff' => $staff,
+        ]);
     }
 }

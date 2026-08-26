@@ -29,18 +29,13 @@
                 {{-- Main admission details --}}
                 <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                     <div>
-                        <label class="mb-1 block text-sm font-medium text-slate-700">
-                            {{ __('Admission No.') }} <span class="text-red-500">*</span>
-                        </label>
-                        <input type="text" name="In_Pt_No" value="{{ old('In_Pt_No', $inPatient->In_Pt_No) }}" maxlength="10"
-                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                               required @if($inPatient->exists) readonly @endif>
-                        @if($inPatient->exists)
-                            <p class="mt-1 text-xs text-slate-400">{{ __('Cannot be changed after creation') }}</p>
-                        @endif
-                        @error('In_Pt_No')
-                            <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
-                        @enderror
+                        <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Admission No.') }}</label>
+                        <input type="text" value="{{ $inPatient->exists ? $inPatient->In_Pt_No : $nextInPtNo }}" disabled
+                               placeholder="{{ __('Auto-generated') }}"
+                               class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
+                        <p class="mt-1 text-xs text-slate-400">
+                            {{ $inPatient->exists ? __('Cannot be changed after creation') : __('Generated automatically when saved') }}
+                        </p>
                     </div>
 
                     <div class="sm:col-span-2">

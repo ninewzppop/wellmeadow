@@ -12,7 +12,7 @@
 | StfRota | A dated shift allocation of a staff member to a ward. `WkBegin` = week beginning date, `Shift` = Morning/Evening/Night. |
 | Alloc_Wd_No | Staff member's primary/assigned ward. |
 | LocalDr | A local (community) doctor, referenced by patients as `Clinic_No`. |
-| Patient | A registered patient. `Pt_No`, FK `Clinic_No`. |
+| Patient | A registered patient. `Pt_No` auto-generated as `PT{n}` (no zero-padding, continues from the highest existing number), FK `Clinic_No`. |
 | NextOfKin | A patient's next of kin. |
 | Appointment | An outpatient appointment; references patient, consulting staff, room. |
 | Outpatient / InPatient | Appointment subtypes; InPatient also references a `Bed`. |
@@ -51,3 +51,7 @@
 | StockMovement | Insert-only audit log of restocks/adjustments from the two inventory pages: which item, ±quantity, who (`Moved_By`), when (`MoveDate`), why (`Note`). Outbound flows are not logged. |
 | Urgent-restock list | Dashboard list ordered out-of-stock first, then low-stock items. |
 | ExpiryDate | New nullable DATE column on `Pharmaceutical`; one expiry per drug row (no batch/lot tracking). |
+| Medication order | A header+lines prescription sent from the room queue to the pharmacy dispensing queue: `MedicationOrder(Order_No MO{n}, Pt_No, Stf_No=prescriber, Appt_No, status)` + child `MedicationOrderItem` rows (Drug_No, UnitsPerDay, AdminMethod, StartDate, FinishDate). Status `pending` means in the pharmacy queue; `dispensed`/`cancelled` mean it has left the queue (dispensed rows are copied into `Medications` as patient history with PaidAt/DispensedAt; cancelled rows keep CancelReason/CancelledAt). |
+| Dispensing queue | The pharmacy worklist at `/medications`: all `MedicationOrder` rows with `status=pending` ordered by `OrderedAt` (order time). Shown with order time, patient + HN, prescriber, drug count/names, status `Pending`. |
+| Order medication | The room-queue modal action that creates a multi-drug `MedicationOrder` (and its items) in `pending` state; the visit stays `in consultation` until finished separately via "Finish visit". |
+| Confirm dispense & payment | Single combined pharmacy action (`POST /medications/{order}/confirm`) that, in one transaction, creates one `Medications` history row per order item and marks the order `dispensed` (`PaidAt = DispensedAt = now()`), removing it from the queue. |

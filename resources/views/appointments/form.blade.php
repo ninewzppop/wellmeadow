@@ -5,14 +5,9 @@
 @section('content')
 <div class="mx-auto max-w-4xl">
     <div class="rounded-2xl bg-white p-8 shadow-sm">
-        <h1 class="mb-1 text-2xl font-bold text-slate-900">
+        <h1 class="mb-6 text-2xl font-bold text-slate-900">
             {{ $appointment->exists ? __('Edit Appointment') : __('New Appointment') }}
         </h1>
-        @if (! $appointment->exists)
-            <p class="mb-6 text-sm text-slate-500">{{ __('The appointment number is generated automatically — just pick and save.') }}</p>
-        @else
-            <p class="mb-6 text-sm text-slate-500">{{ __('Appointment No.') }}: <span class="font-semibold text-slate-700">{{ $appointment->Appt_No }}</span></p>
-        @endif
 
         <form method="POST" action="{{ $appointment->exists ? route('appointments.update', $appointment) : route('appointments.store') }}">
             @csrf
@@ -36,6 +31,16 @@
             <div class="grid grid-cols-1 gap-8">
                 {{-- Main appointment details --}}
                 <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Appointment No.') }}</label>
+                        <input type="text" value="{{ $appointment->exists ? $appointment->Appt_No : $nextApptNo }}" disabled
+                               placeholder="{{ __('Auto-generated') }}"
+                               class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
+                        <p class="mt-1 text-xs text-slate-400">
+                            {{ $appointment->exists ? __('Cannot be changed after creation') : __('Generated automatically when saved') }}
+                        </p>
+                    </div>
+
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">
                             {{ __('Patient') }} <span class="text-red-500">*</span>
