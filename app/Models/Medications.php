@@ -40,4 +40,15 @@ class Medications extends Model
     {
         return $this->belongsTo(Pharmaceutical::class, 'Drug_No', 'Drug_No');
     }
+
+    public static function nextNo(): string
+    {
+        $max = static::query()
+            ->where('Med_No', 'like', 'MD%')
+            ->pluck('Med_No')
+            ->map(fn (string $medNo) => (int) substr($medNo, 2))
+            ->max();
+
+        return 'MD'.($max + 1);
+    }
 }

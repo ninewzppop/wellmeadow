@@ -121,7 +121,7 @@ class MedicationOrderController extends Controller
         DB::transaction(function () use ($order) {
             foreach ($order->items as $item) {
                 Medications::create([
-                    'Med_No' => $this->generateId('Medications', 'Med_No', 'M'),
+                    'Med_No' => Medications::nextNo(),
                     'Pt_No' => $order->Pt_No,
                     'Stf_No' => $order->Stf_No,
                     'Drug_No' => $item->Drug_No,
