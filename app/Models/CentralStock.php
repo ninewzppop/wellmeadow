@@ -2,11 +2,19 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasStockStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CentralStock extends Model
 {
+    use HasStockStatus;
+
+    public const TYPE_SURGICAL = 'Surgical';
+
+    public const TYPE_NON_SURGICAL = 'NonSurgical';
+
     protected $table = 'CentralStock';
 
     protected $primaryKey = 'Item_No';
@@ -24,5 +32,18 @@ class CentralStock extends Model
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class, 'Suppl_No', 'Suppl_No');
+    }
+
+    public function movements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class, 'Item_No', 'Item_No');
+    }
+
+    public static function itemTypes(): array
+    {
+        return [
+            self::TYPE_SURGICAL => __('Surgical'),
+            self::TYPE_NON_SURGICAL => __('Non-surgical'),
+        ];
     }
 }

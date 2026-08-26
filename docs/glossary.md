@@ -43,3 +43,11 @@
 | Queue-context creation | Creating an appointment from a room's queue page (`?room=&date=`): form pre-fills room/date and saving redirects back to that day queue. |
 | Form-selectable statuses | `waiting list`, `scheduled`, `cancelled`, `no-show` — the only statuses settable via the appointment form; lifecycle states are queue-action-only. |
 | Board date | The queue day chosen once on the rooms board (`/rooms?date=`, default today) and carried into every room card link and the queue pages it opens. |
+| Stock status | Computed state of an item: `out` (qty = 0), `low` (0 < qty ≤ ReorderLvl), `normal` (qty > ReorderLvl). NULL qty counts as 0; NULL ReorderLvl means always `normal`. |
+| Expiry status | Pharma-only computed state: `expired` (ExpiryDate < today) or `near-expiry` (today ≤ ExpiryDate ≤ today + 90 days). Reported as separate buckets. |
+| Surgical / NonSurgical | The two values of `CentralStock.ItemType`; the Stock page's category filter and search vocabulary. |
+| Restock | Adding quantity to an item (+N): updates `QtyInStock` and writes one `StockMovement` row in a transaction. |
+| Adjust-down | Removing stock without a dispensing flow (−N, e.g. damaged/count correction); requires a Note; also logged as a `StockMovement`. |
+| StockMovement | Insert-only audit log of restocks/adjustments from the two inventory pages: which item, ±quantity, who (`Moved_By`), when (`MoveDate`), why (`Note`). Outbound flows are not logged. |
+| Urgent-restock list | Dashboard list ordered out-of-stock first, then low-stock items. |
+| ExpiryDate | New nullable DATE column on `Pharmaceutical`; one expiry per drug row (no batch/lot tracking). |

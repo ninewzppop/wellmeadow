@@ -221,3 +221,62 @@ Schema: unchanged.
 Added 2026-08-26 (ADR-0006): the queue date is selected once on the rooms
 board (`?date=`, default today, invalid → today) and flows through card
 links into each room's day queue; the queue page itself is picker-less.
+
+---
+
+# Pharmaceutical & Stock pages
+
+Added 2026-08-26 (ADR-0007). Two inventory pages over `Pharmaceutical`
+and `CentralStock` plus one new movement log table; two owner-approved
+schema additions.
+
+## Entities
+
+| Entity | Table | Key attributes | Lifecycle |
+|---|---|---|---|
+| Pharmaceutical (drug) | `Pharmaceutical` (+ approved `ExpiryDate DATE NULL`) | Drug_No PK, Dosage, AdminMethod, QtyInStock, ReorderLvl, ExpiryDate, Suppl_No FK | create (auto-ID DRnn) / edit / restock / adjust / guarded delete |
+| Stock item (supply) | `CentralStock` (unmodified schema) | Item_No PK, ItemType ∈ {Surgical, NonSurgical}, Description, QtyInStock, ReorderLvl, Suppl_No FK | create (auto-ID ITnn) / edit / restock / adjust / guarded delete |
+| Stock movement | `StockMovement` (**new**) | id AI PK, Drug_No NULL FK, Item_No NULL FK, QtyChange signed, Note NULL, Moved_By FK users.id NULL, MoveDate | insert-only audit log |
+
+## Value objects
+
+- **Stock status**: `out` (qty = 0), `low` (0 < qty ≤ ReorderLvl),
+  `normal` (qty > ReorderLvl); computed in model accessors —
+  QtyInStock NULL ⇒ 0, ReorderLvl NULL ⇒ always normal.
+- **Expiry status** (pharma only): `expired` (ExpiryDate < today),
+  `near-expiry` (today ≤ ExpiryDate ≤ today + 90 days); reported as
+  separate buckets, never merged.
+- **Movement direction**: restock = +N; adjust-down = −N with required
+  Note.
+
+## Relationships
+
+- Pharmaceutical 1—N StockMovement; CentralStock 1—N StockMovement
+  (exactly one of the two FKs set per movement row).
+- StockMovement N—1 User (who performed the action).
+- Both items N—1 Supplier (existing).
+
+## Invariants
+
+1. Every restock/adjust writes exactly one `StockMovement` row in the
+   same transaction as the `QtyInStock` update.
+2. A movement row references exactly one of {Drug_No, Item_No}.
+3. Forms require QtyInStock ≥ 0 and ReorderLvl ≥ 0 — new rows are never
+   status-ambiguous.
+4. Adjust-down requires a non-empty Note; QtyChange ≠ 0.
+5. Delete fails gracefully when Medications/PatientAllergy/Itemrequest
+   still reference the row.
+6. Status/expiry logic exists only in model accessors — never duplicated
+   in controllers or views.
+
+## Persistence map
+
+| Concern | Storage/Query | Notes |
+|---|---|---|
+| Dashboard counts | aggregate queries on status accessors' underlying conditions (`qty = 0`, `qty <= ReorderLvl`, expiry window) | per page |
+| Urgent-restock list | ORDER BY qty = 0 DESC, then low-stock | out first, then low |
+| Search | LIKE on Name / code / ItemType / Description | case-insensitive |
+| Filters | status ∈ {all, low, out, normal}; stock page adds Surgical/NonSurgical | query params |
+| Restock/adjust | transaction: UPDATE QtyInStock + INSERT StockMovement | Moved_By = auth user |
+| Movement history | StockMovement by Drug_No/Item_No, newest first | insert-only |
+| Schema | ADD `Pharmaceutical.ExpiryDate`; CREATE `StockMovement` | only approved changes |
