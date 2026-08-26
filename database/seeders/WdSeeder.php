@@ -16,8 +16,8 @@ class WdSeeder extends Seeder
             ['Wd_No' => 'WD03', 'Wd_Name' => 'Surgical', 'Location' => 'Block B, Floor 1', 'TotalBeds' => 14, 'TelExtension' => '2201'],
             ['Wd_No' => 'WD04', 'Wd_Name' => 'Maternity', 'Location' => 'Block B, Floor 2', 'TotalBeds' => 14, 'TelExtension' => '2202'],
             ['Wd_No' => 'WD05', 'Wd_Name' => 'General Medicine', 'Location' => 'Block C, Floor 1', 'TotalBeds' => 14, 'TelExtension' => '2301'],
-            ['Wd_No' => 'WD06', 'Wd_Name' => 'Orthopaedics', 'Location' => 'Block C, Floor 2', 'TotalBeds' => 14, 'TelExtension' => '2302'],
-            ['Wd_No' => 'WD07', 'Wd_Name' => 'Neurology', 'Location' => 'Block D, Floor 1', 'TotalBeds' => 14, 'TelExtension' => '2401'],
+            ['Wd_No' => 'WD06', 'Wd_Name' => 'Orthopaedics', 'Location' => 'Block C, Floor 2', 'TotalBeds' => 15, 'TelExtension' => '2302'],
+            ['Wd_No' => 'WD07', 'Wd_Name' => 'Neurology', 'Location' => 'Block D, Floor 1', 'TotalBeds' => 15, 'TelExtension' => '2401'],
         ];
 
         foreach ($wards as $ward) {
