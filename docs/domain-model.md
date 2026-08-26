@@ -311,10 +311,11 @@ Added 2026-08-26 (ADR-0008). Header+items order queue separating "ordered" from 
 ## Invariants
 
 1. Every order has ≥ 1 item; FinishDate ≥ StartDate and UnitsPerDay ≥ 1 per item.
-2. An order is pending until exactly one of: confirm (copies each item to `Medications` + sets PaidAt/DispensedAt) or cancel (sets CancelledAt/CancelReason); terminal states never re-enter the queue.
+2. An order is pending until exactly one of: confirm (copies each item to `Medications` + sets PaidAt/DispensedAt + deducts stock) or cancel (sets CancelledAt/CancelReason); terminal states never re-enter the queue.
 3. Allergy check is aggregated across all items (Drug_No OR name match against `PatientAllergy`); a pending conflict blocks saving without explicit `override_allergy`.
 4. The pharmacy queue is `status = pending` ordered by `OrderedAt` ascending; finished/cancelled orders are absent.
-5. Order_No `MO{n}` generation is server-side, un-padded increment.
+5. Order_No `MO{n}` and `Medications.Med_No` `MD{n}` generation is server-side, un-padded increment.
+6. Dispensing requires `Pharmaceutical.QtyInStock` ≥ `UnitsPerDay × daysInclusive` per item; if any item is out-of-stock the whole confirm is blocked with `Cannot dispense :drug — only :stock left, need :need.` No partial dispense.
 
 ## Persistence map
 
@@ -323,6 +324,6 @@ Added 2026-08-26 (ADR-0008). Header+items order queue separating "ordered" from 
 | Doctor ordering (modal) | Transaction: INSERT MedicationOrder + N MedicationOrderItem | history panel from `Patient.medications`; sync-dates helper is client-only |
 | Pharmacy queue | `MedicationOrder` WHERE status=pending ORDER BY OrderedAt | index on status |
 | Pharmacy detail | `MedicationOrder` + items.drug + patient.allergies.drug + prescriber | allergy warning display-only |
-| Confirm (single button) | Transaction: N INSERT `Medications` (via existing `generateId('Medications','Med_No','M')`) + UPDATE order dispensed/PaidAt/DispensedAt | existing `Medications` schema untouched |
+| Confirm (single button) | Transaction (lockForUpdate on Pharmaceutical): check QtyInStock ≥ need per item; if all pass, decrement QtyInStock, insert StockMovement (QtyChange = -need, Note = Dispensed for order), N INSERT `Medications` (`MD{n}`) + UPDATE order dispensed/PaidAt/DispensedAt | all-or-nothing; blocks when out-of-stock |
 | Cancel | UPDATE order cancelled/CancelledAt/CancelReason (reason required) | leaves queue; no history write |
 | Schema | CREATE `MedicationOrder`, `MedicationOrderItem` — no ALTER of existing tables | owner-approved via grilling Q1 |

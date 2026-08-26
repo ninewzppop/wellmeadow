@@ -8,10 +8,12 @@ use App\Models\Medications;
 use App\Models\Patient;
 use App\Models\Pharmaceutical;
 use App\Models\Room;
+use App\Models\StockMovement;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class MedicationOrderController extends Controller
@@ -118,27 +120,71 @@ class MedicationOrderController extends Controller
                 ->withErrors(['queue' => __('This order is no longer pending.')]);
         }
 
-        DB::transaction(function () use ($order) {
-            foreach ($order->items as $item) {
-                Medications::create([
-                    'Med_No' => Medications::nextNo(),
-                    'Pt_No' => $order->Pt_No,
-                    'Stf_No' => $order->Stf_No,
-                    'Drug_No' => $item->Drug_No,
-                    'UnitsPerDay' => $item->UnitsPerDay,
-                    'AdminMethod' => $item->AdminMethod,
-                    'StartDate' => $item->StartDate,
-                    'FinishDate' => $item->FinishDate,
-                ]);
-            }
+        $order->loadMissing(['items.drug', 'patient']);
 
-            $now = now();
-            $order->update([
-                'status' => MedicationOrder::STATUS_DISPENSED,
-                'PaidAt' => $now,
-                'DispensedAt' => $now,
-            ]);
-        });
+        $needs = [];
+        foreach ($order->items as $item) {
+            $days = $item->StartDate->diffInDays($item->FinishDate) + 1;
+            $needs[$item->getKey()] = $item->UnitsPerDay * $days;
+        }
+
+        try {
+            DB::transaction(function () use ($order, $needs) {
+                $drugNos = $order->items->pluck('Drug_No')->unique()->filter()->values();
+                $stocks = Pharmaceutical::whereIn('Drug_No', $drugNos)->lockForUpdate()->get()->keyBy('Drug_No');
+
+                foreach ($order->items as $item) {
+                    $need = $needs[$item->getKey()];
+                    $stock = $stocks[$item->Drug_No] ?? null;
+                    $available = $stock?->QtyInStock ?? 0;
+                    if ($available < $need) {
+                        $drugName = $stock?->Name ?? $item->drug?->Name ?? $item->Drug_No;
+                        throw ValidationException::withMessages([
+                            'queue' => __('Cannot dispense :drug — only :stock left, need :need.', [
+                                'drug' => $drugName, 'stock' => $available, 'need' => $need,
+                            ]),
+                        ]);
+                    }
+                }
+
+                foreach ($order->items as $item) {
+                    $need = $needs[$item->getKey()];
+                    $stock = $stocks[$item->Drug_No];
+
+                    $stock->update(['QtyInStock' => ($stock->QtyInStock ?? 0) - $need]);
+
+                    StockMovement::create([
+                        'Drug_No' => $item->Drug_No,
+                        'QtyChange' => -$need,
+                        'Note' => __('Dispensed for :order — :patient — :drug ×:need', [
+                            'order' => $order->Order_No, 'patient' => $order->Pt_No, 'drug' => $stock->Name ?? $item->Drug_No, 'need' => $need,
+                        ]),
+                        'Moved_By' => auth()->id(),
+                        'MoveDate' => now(),
+                    ]);
+
+                    Medications::create([
+                        'Med_No' => Medications::nextNo(),
+                        'Pt_No' => $order->Pt_No,
+                        'Stf_No' => $order->Stf_No,
+                        'Drug_No' => $item->Drug_No,
+                        'UnitsPerDay' => $item->UnitsPerDay,
+                        'AdminMethod' => $item->AdminMethod,
+                        'StartDate' => $item->StartDate,
+                        'FinishDate' => $item->FinishDate,
+                    ]);
+                }
+
+                $now = now();
+                $order->update([
+                    'status' => MedicationOrder::STATUS_DISPENSED,
+                    'PaidAt' => $now,
+                    'DispensedAt' => $now,
+                ]);
+            });
+        } catch (ValidationException $e) {
+            throw $e;
+        }
 
         return redirect()->route('medications.index')
             ->with('status', __('Dispensed medication for :name.', [

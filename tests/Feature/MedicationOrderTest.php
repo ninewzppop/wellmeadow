@@ -134,4 +134,41 @@ class MedicationOrderTest extends TestCase
 
         $this->get(route('medications.index'))->assertOk()->assertSee('PT1');
     }
+
+    public function test_out_of_stock_blocks_dispense(): void
+    {
+        Patient::create(['Pt_No' => 'PT1', 'FirstName' => 'John', 'LastName' => 'Doe']);
+        Stf::create(['Stf_No' => 'S1001', 'FirstName' => 'Dr', 'LastName' => 'A']);
+        Room::create(['Room_No' => 'R001', 'RoomName' => 'Room 1']);
+        Pharmaceutical::create(['Drug_No' => 'DR01', 'Name' => 'Penicillin', 'QtyInStock' => 1, 'ReorderLvl' => 10]);
+        $appt = Appointment::create(['Appt_No' => 'A1', 'Pt_No' => 'PT1', 'Consult_Stf_No' => 'S1001', 'ApptDate' => now()->toDateString(), 'ApptTime' => '09:00', 'Room_No' => 'R001', 'status' => Appointment::STATUS_IN_CONSULTATION]);
+
+        $this->post(route('rooms.medication-order.store', ['room' => 'R001', 'appointment' => 'A1']), [
+            'drugs' => [['Drug_No' => 'DR01', 'UnitsPerDay' => 5, 'AdminMethod' => 'Oral', 'StartDate' => now()->toDateString(), 'FinishDate' => now()->toDateString()]],
+        ])->assertRedirect();
+
+        $order = MedicationOrder::first();
+        $res = $this->post(route('medications.confirm', $order));
+        $res->assertSessionHasErrors('queue');
+        $this->assertDatabaseHas('MedicationOrder', ['Order_No' => $order->Order_No, 'status' => 'pending']);
+        $this->assertDatabaseHas('Pharmaceutical', ['Drug_No' => 'DR01', 'QtyInStock' => 1]);
+    }
+
+    public function test_confirm_deducts_stock_and_records_movement(): void
+    {
+        Patient::create(['Pt_No' => 'PT1', 'FirstName' => 'John', 'LastName' => 'Doe']);
+        Stf::create(['Stf_No' => 'S1001', 'FirstName' => 'Dr', 'LastName' => 'A']);
+        Room::create(['Room_No' => 'R001', 'RoomName' => 'Room 1']);
+        Pharmaceutical::create(['Drug_No' => 'DR01', 'Name' => 'Penicillin', 'QtyInStock' => 10, 'ReorderLvl' => 10]);
+        $appt = Appointment::create(['Appt_No' => 'A1', 'Pt_No' => 'PT1', 'Consult_Stf_No' => 'S1001', 'ApptDate' => now()->toDateString(), 'ApptTime' => '09:00', 'Room_No' => 'R001', 'status' => Appointment::STATUS_IN_CONSULTATION]);
+
+        $this->post(route('rooms.medication-order.store', ['room' => 'R001', 'appointment' => 'A1']), [
+            'drugs' => [['Drug_No' => 'DR01', 'UnitsPerDay' => 2, 'AdminMethod' => 'Oral', 'StartDate' => now()->toDateString(), 'FinishDate' => now()->addDays(1)->toDateString()]],
+        ]);
+
+        $order = MedicationOrder::first();
+        $this->post(route('medications.confirm', $order))->assertRedirect();
+        $this->assertDatabaseHas('Pharmaceutical', ['Drug_No' => 'DR01', 'QtyInStock' => 6]);
+        $this->assertDatabaseHas('StockMovement', ['Drug_No' => 'DR01', 'QtyChange' => -4]);
+    }
 }

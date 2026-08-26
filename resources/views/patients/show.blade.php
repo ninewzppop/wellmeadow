@@ -150,6 +150,51 @@
                     </div>
                 </section>
             @endif
+
+            {{-- Medication history --}}
+            <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div class="mb-4 flex items-center justify-between">
+                    <h2 class="text-sm font-semibold text-slate-700">{{ __('Medication History') }}</h2>
+                    <span class="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                        {{ $patient->medications->count() }} {{ __('records') }}
+                    </span>
+                </div>
+                @if ($patient->medications->isEmpty())
+                    <p class="py-6 text-center text-sm text-slate-400">{{ __('No medication history.') }}</p>
+                @else
+                    <div class="overflow-hidden rounded-xl border border-slate-100">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-slate-100 text-sm">
+                                <thead class="bg-slate-50">
+                                    <tr class="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                        <th class="px-4 py-3">{{ __('Drug') }}</th>
+                                        <th class="px-4 py-3">{{ __('Units per day') }}</th>
+                                        <th class="px-4 py-3">{{ __('Administration method') }}</th>
+                                        <th class="px-4 py-3">{{ __('Period') }}</th>
+                                        <th class="px-4 py-3">{{ __('Prescribed by') }}</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    @foreach ($patient->medications->sortByDesc('StartDate') as $med)
+                                        <tr>
+                                            <td class="px-4 py-3">
+                                                <span class="font-medium text-slate-800">{{ $med->drug?->Name ?? $med->Drug_No }}</span>
+                                                <span class="block text-xs text-slate-400">{{ $med->Med_No }} · {{ $med->Drug_No }}</span>
+                                            </td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $med->UnitsPerDay }}</td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $med->AdminMethod }}</td>
+                                            <td class="px-4 py-3 text-slate-600">
+                                                {{ $med->StartDate?->format('d/m/Y') }} → {{ $med->FinishDate?->format('d/m/Y') }}
+                                            </td>
+                                            <td class="px-4 py-3 text-slate-600">{{ $med->staff?->full_name ?? $med->Stf_No ?? '-' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                @endif
+            </section>
         </div>
 
         {{-- Sidebar --}}

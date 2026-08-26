@@ -344,6 +344,11 @@
     "Cannot remove :qty — only :stock left in stock.": "ปรับลด :qty ไม่ได้ — คงเหลือเพียง :stock หน่วย",
     "Restocked :name (+:qty).": "เติมสต๊อก :name (+:qty) เรียบร้อยแล้ว",
     "Medication history": "ประวัติการสั่งยา",
+    "Medication History": "ประวัติการได้รับยา",
+    "records": "รายการ",
+    "No medication history.": "ไม่มีประวัติการได้รับยา",
+    "Period": "ช่วงเวลา",
+    "Prescribed by": "แพทย์ผู้สั่ง",
     "Tick to copy into the order on the right. You can edit before sending.": "ติ๊กเพื่อคัดลอกไปใส่รายการสั่งยาฝั่งขวา แก้ไขได้ก่อนส่ง",
     "No medication history for this patient.": "ไม่มีประวัติการสั่งยาของผู้ป่วยนี้",
     "day": "วัน",
@@ -376,5 +381,7 @@
     "Dispensed medication for :name.": "จ่ายยาให้ :name เรียบร้อยแล้ว",
     "Cancelled medication order :no.": "ยกเลิกคำสั่งยา :no เรียบร้อยแล้ว",
     "The following ordered drugs match a recorded allergy for this patient: :list.": "ยาต่อไปนี้ตรงกับประวัติแพ้ยาของผู้ป่วย: :list",
+    "Cannot dispense :drug — only :stock left, need :need.": "ไม่สามารถจ่ายยา :drug ได้ — คงเหลือ :stock ต้องการ :need",
+    "Dispensed for :order — :patient — :drug ×:need": "จ่ายยาให้ :order — :patient — :drug ×:need",
     "Adjusted :name (-:qty).": "ปรับลด :name (-:qty) เรียบร้อยแล้ว"
 }

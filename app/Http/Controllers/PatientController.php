@@ -63,6 +63,8 @@ class PatientController extends Controller
             'nextOfKins',
             'allergies.drug',
             'allergies.recordedBy',
+            'medications.drug',
+            'medications.staff',
         ]);
 
         return view('patients.show', compact('patient'));
