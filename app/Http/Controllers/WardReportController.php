@@ -16,7 +16,7 @@ class WardReportController extends Controller
             $query->when($weekBeginning, fn ($q) => $q->whereDate('WkBegin', $weekBeginning))
                 ->with(['stf.positions.pos', 'stf.assignedWard']);
         }])
-            ->orderBy('Wd_Name')
+            ->orderBy('Wd_No')
             ->get();
 
         return view('wards.report', compact('wards', 'weekBeginning'));
