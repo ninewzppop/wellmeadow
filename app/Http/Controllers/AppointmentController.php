@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Appointment;
 use App\Models\Outpatient;
 use App\Models\Patient;
+use App\Models\PatientAllergy;
+use App\Models\Pharmaceutical;
 use App\Models\Room;
 use App\Models\Stf;
 use Illuminate\Http\RedirectResponse;
@@ -79,15 +81,26 @@ class AppointmentController extends Controller
             'rooms' => $rooms,
             'statuses' => $this->formStatuses(null),
             'nextApptNo' => $this->nextApptNo(),
+            'allergyDrugs' => Pharmaceutical::orderBy('Name')->get(),
+            'allergyStaff' => Stf::orderBy('LastName')->orderBy('FirstName')->get(),
+            'severities' => AllergyController::SEVERITIES,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateAppointment($request);
+        $allergyData = $this->validateInlineAllergy($request);
         $data['Appt_No'] = $this->nextApptNo();
 
-        Appointment::create($data);
+        DB::transaction(function () use ($data, $allergyData) {
+            Appointment::create($data);
+
+            if ($allergyData !== null) {
+                $allergyData['Allergy_No'] = $this->generateId('PatientAllergy', 'Allergy_No', 'AL');
+                PatientAllergy::create($allergyData);
+            }
+        });
 
         if ($queueContext = $this->queueContext($request)) {
             return redirect()->route('rooms.show', $queueContext)
@@ -117,14 +130,25 @@ class AppointmentController extends Controller
             'consultants' => $consultants,
             'rooms' => $rooms,
             'statuses' => $this->formStatuses($appointment),
+            'allergyDrugs' => Pharmaceutical::orderBy('Name')->get(),
+            'allergyStaff' => Stf::orderBy('LastName')->orderBy('FirstName')->get(),
+            'severities' => AllergyController::SEVERITIES,
         ]);
     }
 
     public function update(Request $request, Appointment $appointment): RedirectResponse
     {
         $data = $this->validateAppointment($request, $appointment);
+        $allergyData = $this->validateInlineAllergy($request);
 
-        $appointment->update($data);
+        DB::transaction(function () use ($appointment, $data, $allergyData) {
+            $appointment->update($data);
+
+            if ($allergyData !== null) {
+                $allergyData['Allergy_No'] = $this->generateId('PatientAllergy', 'Allergy_No', 'AL');
+                PatientAllergy::create($allergyData);
+            }
+        });
 
         return redirect()->route('appointments.index')
             ->with('status', __('Updated appointment :no.', ['no' => $appointment->Appt_No]));
@@ -202,5 +226,41 @@ class AppointmentController extends Controller
             ->max();
 
         return 'A'.($max + 1);
+    }
+
+    protected function validateInlineAllergy(Request $request): ?array
+    {
+        $hasInput = $request->filled('allergy_Reaction')
+            || $request->filled('allergy_Drug_No')
+            || $request->filled('allergy_Severity')
+            || $request->filled('allergy_DiagDate');
+
+        if (! $hasInput) {
+            return null;
+        }
+
+        $validated = $request->validate([
+            'allergy_Drug_No' => ['nullable', 'exists:Pharmaceutical,Drug_No'],
+            'allergy_Reaction' => ['required', 'string', 'max:150'],
+            'allergy_Severity' => ['required', 'string', 'max:15', 'in:'.implode(',', AllergyController::SEVERITIES)],
+            'allergy_DiagDate' => ['required', 'date'],
+            'allergy_Rec_Stf_No' => ['nullable', 'exists:Stf,Stf_No'],
+        ]);
+
+        $allergyName = null;
+        if (! empty($validated['allergy_Drug_No'])) {
+            $drug = Pharmaceutical::find($validated['allergy_Drug_No']);
+            $allergyName = $drug?->Name;
+        }
+
+        return [
+            'Pt_No' => $request->input('Pt_No'),
+            'Drug_No' => $validated['allergy_Drug_No'] ?? null,
+            'Allergy_Name' => $allergyName,
+            'Reaction' => $validated['allergy_Reaction'],
+            'Severity' => $validated['allergy_Severity'],
+            'DiagDate' => $validated['allergy_DiagDate'],
+            'Rec_Stf_No' => $validated['allergy_Rec_Stf_No'] ?? null,
+        ];
     }
 }

@@ -28,9 +28,9 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-1 gap-8">
+            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
                 {{-- Main appointment details --}}
-                <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+                <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:col-span-2">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Appointment No.') }}</label>
                         <input type="text" value="{{ $appointment->exists ? $appointment->Appt_No : $nextApptNo }}" disabled
@@ -134,6 +134,72 @@
                         @error('ApptTime')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
+                    </div>
+                </div>
+
+                {{-- Allergy record (optional, same fields as New Allergy Record) --}}
+                <div class="rounded-2xl bg-amber-50 p-5">
+                    <h2 class="mb-1 text-sm font-semibold text-amber-900">{{ __('Allergy Details') }}</h2>
+                    <p class="mb-4 text-xs text-amber-700/70">{{ __('Optional — record an allergy for this patient at booking time. Leave blank to skip.') }}</p>
+                    <div class="grid grid-cols-1 gap-4">
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-amber-900/70">{{ __('Allergen') }}</label>
+                            <select name="allergy_Drug_No" class="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                                <option value="">{{ __('— none —') }}</option>
+                                @foreach ($allergyDrugs as $drug)
+                                    <option value="{{ $drug->Drug_No }}" {{ old('allergy_Drug_No') == $drug->Drug_No ? 'selected' : '' }}>
+                                        {{ $drug->Name }} ({{ $drug->Drug_No }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-[11px] text-amber-700/60">{{ __('The allergen name follows the selected drug.') }}</p>
+                            @error('allergy_Drug_No')
+                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-amber-900/70">{{ __('Reaction') }} <span class="text-red-500">*</span></label>
+                            <textarea name="allergy_Reaction" rows="3" maxlength="150"
+                                      placeholder="{{ __('e.g. Rash, swelling, difficulty breathing...') }}"
+                                      class="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">{{ old('allergy_Reaction') }}</textarea>
+                            @error('allergy_Reaction')
+                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-amber-900/70">{{ __('Severity') }} <span class="text-red-500">*</span></label>
+                            <select name="allergy_Severity" class="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                                <option value="">{{ __('Select') }}</option>
+                                @foreach ($severities as $severity)
+                                    <option value="{{ $severity }}" {{ old('allergy_Severity') === $severity ? 'selected' : '' }}>{{ __($severity) }}</option>
+                                @endforeach
+                            </select>
+                            @error('allergy_Severity')
+                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-amber-900/70">{{ __('Diagnosed Date') }} <span class="text-red-500">*</span></label>
+                            <input type="date" name="allergy_DiagDate" value="{{ old('allergy_DiagDate') }}"
+                                   class="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                            @error('allergy_DiagDate')
+                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-amber-900/70">{{ __('Recorded By') }}</label>
+                            <select name="allergy_Rec_Stf_No" class="w-full rounded-lg border border-amber-200 bg-white px-3 py-2 text-sm focus:border-amber-500 focus:outline-none">
+                                <option value="">{{ __('— select —') }}</option>
+                                @foreach ($allergyStaff as $member)
+                                    <option value="{{ $member->Stf_No }}" {{ old('allergy_Rec_Stf_No') == $member->Stf_No ? 'selected' : '' }}>
+                                        {{ $member->full_name }} ({{ $member->Stf_No }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('allergy_Rec_Stf_No')
+                                <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
+                            @enderror
+                        </div>
                     </div>
                 </div>
             </div>
