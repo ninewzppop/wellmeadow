@@ -13,16 +13,18 @@ class BedSeeder extends Seeder
         DB::table('Bed')->where('Bed_No', 'like', 'B%')->delete();
 
         // ลบเตียงเก่าที่เลขไม่ตรงรูปแบบใหม่ (เช่น 500 แทน 501) เพื่อแก้ให้เริ่ม 101 ตามคำขอ
-        foreach (['WD01','WD02','WD03','WD04','WD05','WD06','WD07','WD08','WD09'] as $ward) {
+        foreach (['WD01','WD02','WD03','WD04','WD05','WD06','WD07'] as $ward) {
             $wardNum = (int) substr($ward, 2);
             $base = $wardNum * 100; // 100, 200, ...
             // ลบเตียงที่ลงท้ายด้วย 00 (เช่น 500) ซึ่งควรเริ่ม 501
             DB::table('Bed')->where('Wd_No', $ward)->where('Bed_No', (string) $base)->delete();
         }
+        // ลบเตียงของวอร์ดที่ถูกลบ (WD08/WD09)
+        DB::table('Bed')->whereIn('Wd_No', ['WD08','WD09'])->delete();
 
         $beds = [];
 
-        // ทุกวอร์ดใช้เลขตามวอร์ด เริ่ม 101, 201, 501... ตามคำขอ: วอร์ด1 101-114
+        // ทุกวอร์ดใช้เลขตามวอร์ด เริ่ม 101, 201, 501... ตามคำขอ: วอร์ด1 101-114 — เหลือ 7 วอร์ด ×14
         $allWards = [
             'WD01' => 14,
             'WD02' => 14,
@@ -31,8 +33,6 @@ class BedSeeder extends Seeder
             'WD05' => 14,
             'WD06' => 14,
             'WD07' => 14,
-            'WD08' => 15,
-            'WD09' => 15,
         ];
 
         foreach ($allWards as $ward => $count) {
