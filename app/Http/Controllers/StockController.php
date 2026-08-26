@@ -59,4 +59,17 @@ class StockController extends InventoryController
 
         return $query;
     }
+
+    protected function dashboardCounts(): array
+    {
+        $base = CentralStock::query();
+        $counts = CentralStock::stockCounts();
+
+        // Replace Normal with surgical / non-surgical breakdown as requested
+        unset($counts['normal']);
+        $counts['surgical'] = (clone $base)->where('ItemType', CentralStock::TYPE_SURGICAL)->count();
+        $counts['nonSurgical'] = (clone $base)->where('ItemType', CentralStock::TYPE_NON_SURGICAL)->count();
+
+        return array_merge($counts, $this->extraCounts());
+    }
 }

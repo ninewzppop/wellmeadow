@@ -255,7 +255,7 @@ abstract class InventoryController extends Controller
         return $query->orderBy($this->codeColumn());
     }
 
-    private function dashboardCounts(): array
+    protected function dashboardCounts(): array
     {
         $class = $this->itemClass();
         $counts = $class::stockCounts();

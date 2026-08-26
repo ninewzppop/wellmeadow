@@ -3,10 +3,16 @@
 @php
     $cards = [
         ['label' => __('Total items'), 'value' => $counts['total'], 'params' => [], 'color' => 'text-[#112D6E] bg-[#112D6E]/10'],
-        ['label' => __('Normal'), 'value' => $counts['normal'], 'params' => ['status' => 'normal'], 'color' => 'text-emerald-700 bg-emerald-100'],
-        ['label' => __('Low stock'), 'value' => $counts['low'], 'params' => ['status' => 'low'], 'color' => 'text-amber-800 bg-amber-100'],
-        ['label' => __('Out of stock'), 'value' => $counts['out'], 'params' => ['status' => 'out'], 'color' => 'text-red-700 bg-red-100'],
     ];
+    // For Stock, replace Normal with surgical / non-surgical breakdown as requested
+    if (isset($counts['surgical'])) {
+        $cards[] = ['label' => __('surgical'), 'value' => $counts['surgical'], 'params' => ['type' => 'surgical'], 'color' => 'text-violet-700 bg-violet-100'];
+        $cards[] = ['label' => __('non-surgical'), 'value' => $counts['nonSurgical'], 'params' => ['type' => 'non-surgical'], 'color' => 'text-sky-700 bg-sky-100'];
+    } else {
+        $cards[] = ['label' => __('Normal'), 'value' => $counts['normal'], 'params' => ['status' => 'normal'], 'color' => 'text-emerald-700 bg-emerald-100'];
+    }
+    $cards[] = ['label' => __('Low stock'), 'value' => $counts['low'], 'params' => ['status' => 'low'], 'color' => 'text-amber-800 bg-amber-100'];
+    $cards[] = ['label' => __('Out of stock'), 'value' => $counts['out'], 'params' => ['status' => 'out'], 'color' => 'text-red-700 bg-red-100'];
     if ($expiryCounts !== null) {
         $cards[] = ['label' => __('Near expiry (<= 90 days)'), 'value' => $expiryCounts['nearExpiry'], 'params' => ['expiry' => 'near-expiry'], 'color' => 'text-orange-700 bg-orange-100'];
         $cards[] = ['label' => __('Expired'), 'value' => $expiryCounts['expired'], 'params' => ['expiry' => 'expired'], 'color' => 'text-rose-800 bg-rose-200'];
