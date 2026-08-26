@@ -104,6 +104,8 @@ class MedicationOrderController extends Controller
                 ]);
             }
 
+            $appointment->update(['status' => Appointment::STATUS_COMPLETED_MEDICATION]);
+
             return $order->Order_No;
         });
 

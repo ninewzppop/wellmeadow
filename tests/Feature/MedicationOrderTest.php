@@ -60,8 +60,8 @@ class MedicationOrderTest extends TestCase
         $this->assertDatabaseHas('MedicationOrder', ['Pt_No' => 'PT1', 'Appt_No' => 'A1', 'status' => 'pending']);
         $order = MedicationOrder::first();
         $this->assertCount(2, $order->items);
-        // appointment stays in consultation (not auto-completed)
-        $this->assertEquals(Appointment::STATUS_IN_CONSULTATION, $appt->fresh()->status);
+        // appointment moves to completed-medication
+        $this->assertEquals(Appointment::STATUS_COMPLETED_MEDICATION, $appt->fresh()->status);
         // not yet in Medications history
         $this->assertDatabaseMissing('Medications', ['Pt_No' => 'PT1']);
     }
