@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\CentralStock;
+use App\Models\Drugrequest;
+use App\Models\Itemrequest;
+use App\Models\Pharmaceutical;
 use App\Models\StockMovement;
 use App\Models\Supplier;
 use Illuminate\Database\Eloquent\Builder;
@@ -79,7 +82,19 @@ abstract class InventoryController extends Controller
         $item = $this->findItem($code);
 
         try {
-            $item->delete();
+            DB::transaction(function () use ($item) {
+                // For supplies / drugs the stock history and ward requisition lines are safe to clean;
+                // keep the guard for medical history (Medications / allergies) which must stay.
+                if ($item instanceof CentralStock) {
+                    StockMovement::where('Item_No', $item->getKey())->delete();
+                    Itemrequest::where('Item_No', $item->getKey())->delete();
+                } elseif ($item instanceof Pharmaceutical) {
+                    StockMovement::where('Drug_No', $item->getKey())->delete();
+                    Drugrequest::where('Drug_No', $item->getKey())->delete();
+                }
+
+                $item->delete();
+            });
         } catch (QueryException $e) {
             if (($e->errorInfo[1] ?? null) == 1451) {
                 return back()->with('error', __(':name is still referenced by other records and cannot be deleted.', ['name' => $item->Name]));
