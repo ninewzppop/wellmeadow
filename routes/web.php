@@ -19,6 +19,7 @@ use App\Http\Controllers\StockController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\WardController;
 use App\Http\Controllers\WardReportController;
+use App\Http\Controllers\WardRequisitionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
@@ -73,7 +74,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/pharmacy/{drug}/restock', [PharmaceuticalController::class, 'restock'])->name('pharmacy.restock');
     Route::post('/pharmacy/{drug}/adjust', [PharmaceuticalController::class, 'adjust'])->name('pharmacy.adjust');
     Route::get('/pharmacy/{drug}/history', [PharmaceuticalController::class, 'history'])->name('pharmacy.history');
-    Route::get('/requisitions', [PlaceholderController::class, 'show'])->defaults('page', 'requisitions')->name('requisitions.index');
+    Route::get('/requisitions', [WardRequisitionController::class, 'index'])->name('requisitions.index');
+    Route::get('/requisitions/history', [WardRequisitionController::class, 'history'])->name('requisitions.history');
+    Route::get('/requisitions/report', [WardRequisitionController::class, 'report'])->name('requisitions.report');
+    Route::get('/requisitions/create', [WardRequisitionController::class, 'create'])->name('requisitions.create');
+    Route::post('/requisitions', [WardRequisitionController::class, 'store'])->name('requisitions.store');
+    Route::get('/requisitions/{requisition}', [WardRequisitionController::class, 'show'])->name('requisitions.show');
+    Route::get('/requisitions/{requisition}/edit', [WardRequisitionController::class, 'edit'])->name('requisitions.edit');
+    Route::put('/requisitions/{requisition}', [WardRequisitionController::class, 'update'])->name('requisitions.update');
+    Route::delete('/requisitions/{requisition}', [WardRequisitionController::class, 'destroy'])->name('requisitions.destroy');
+    Route::post('/requisitions/{requisition}/approve', [WardRequisitionController::class, 'approve'])->name('requisitions.approve');
+    Route::post('/requisitions/{requisition}/receive', [WardRequisitionController::class, 'receive'])->name('requisitions.receive');
     Route::get('/rota', [RotaController::class, 'index'])->name('rota.index');
     Route::post('/rota', [RotaController::class, 'store'])->name('rota.store');
     Route::put('/rota/{allocation}', [RotaController::class, 'update'])->name('rota.update');

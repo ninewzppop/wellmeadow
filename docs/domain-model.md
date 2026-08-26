@@ -327,3 +327,50 @@ Added 2026-08-26 (ADR-0008). Header+items order queue separating "ordered" from 
 | Confirm (single button) | Transaction (lockForUpdate on Pharmaceutical): check QtyInStock ≥ need per item; if all pass, decrement QtyInStock, insert StockMovement (QtyChange = -need, Note = Dispensed for order), N INSERT `Medications` (`MD{n}`) + UPDATE order dispensed/PaidAt/DispensedAt | all-or-nothing; blocks when out-of-stock |
 | Cancel | UPDATE order cancelled/CancelledAt/CancelReason (reason required) | leaves queue; no history write |
 | Schema | CREATE `MedicationOrder`, `MedicationOrderItem` — no ALTER of existing tables | owner-approved via grilling Q1 |
+
+---
+
+# Ward Requisition (store → ward supply)
+
+Added 2026-08-27 (ADR-0009). Header + two line tables for surgical/non-surgical supplies and drugs.
+
+## Entities
+
+| Entity | Table | Key attributes | Lifecycle |
+|---|---|---|---|
+| Ward requisition | `Wardrequisitions` (+ `status`, `Received_By` approved) | Wd_Req_No PK `WR{n}`, Stf_No FK (requester), Wd_No FK, DateOrd, DateRecv, status {Pending,Approved,Completed}, Received_By FK | create Pending → approve (deduct stock) → Completed (receive) → history; edit/delete only while Pending |
+| Supply request line | `Itemrequest` (**existing**) | (Wd_Req_No, Item_No) PK, QtyReq | child of requisition; rewritten on update |
+| Drug request line | `Drugrequest` (**existing**) | (Wd_Req_No, Drug_No) PK, QtyReq | child of requisition; rewritten on update |
+
+## Value objects
+
+- **Requisition status**: `Pending` (awaiting store), `Approved` (stock deducted, awaiting delivery), `Completed` (received at ward with signer + date). No `Delivered` gap — Approved covers it until receipt.
+- **Cost**: `QtyReq × CostPerUnit` live from `CentralStock`/`Pharmaceutical`; `Total = Σ lines`.
+
+## Relationships
+
+- Wardrequisition N—1 Wd, N—1 Stf (requester), N—1 Stf (receiver via Received_By)
+- Wardrequisition 1—N Itemrequest, 1—N Drugrequest (at least one line total; can mix supplies + drugs in one header)
+- Itemrequest N—1 CentralStock, Drugrequest N—1 Pharmaceutical
+- Both stock masters 1—N StockMovement (deduction logged on approve)
+
+## Invariants
+
+1. Every requisition has ≥1 line and `Wd_No + Stf_No` required; `Wd_Req_No` `WR{n}` un-padded.
+2. Only `Pending` may be edited/deleted; `Approved` may only be received; `Completed` is archival (queue hides it).
+3. Approve checks `QtyInStock ≥ QtyReq` per line (lockForUpdate); if any line fails the whole approve is blocked with `Cannot approve :item — only :stock left`.
+4. Approve deducts `QtyInStock` and writes one `StockMovement` per line (`QtyChange = -QtyReq`, Note = Approved requisition :no) in the same transaction.
+5. Receive requires `Received_By` + `DateRecv` and moves the requisition to history/report.
+
+## Persistence map
+
+| Concern | Storage/Query | Notes |
+|---|---|---|
+| Create (Charge Nurse) | Transaction: INSERT Wardrequisitions + N Itemrequest/Drugrequest | grouped select with stock & cost data-attrs; DateOrd defaults today |
+| Queue (Store) | `Wardrequisitions` WHERE status IN (Pending,Approved) ORDER BY DateOrd | paginated, filters ward/status; total cost live |
+| Detail | `Wardrequisitions` + ward/requester/receiver + itemRequests.item / drugRequests.drug | shows cost, stock with Low badge (`QtyInStock ≤ ReorderLvl`) |
+| Approve | Transaction lockForUpdate on CentralStock/Pharmaceutical → deduct → StockMovement → status Approved | blocks when out-of-stock |
+| Receive | UPDATE Received_By/DateRecv/status Completed | history hides from queue |
+| History/Report | `Wardrequisitions` WHERE status=Completed + filters ward/date range; low-stock lists are `QtyInStock ≤ ReorderLvl` from masters | per ward + time period as per (n) |
+| Schema | ADD `Wardrequisitions.status`, `Received_By` — only approved change | no new tables |
+| Suppliers (l) | `Supplier` CRUD via existing `SupplierController` | Medical Director scope, no change |
