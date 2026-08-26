@@ -32,6 +32,19 @@
         </div>
     </div>
 
+    @if ($errors->any())
+        <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <ul class="list-inside list-disc space-y-0.5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    @if (session('status'))
+        <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{{ session('status') }}</div>
+    @endif
+
     {{-- Active queue --}}
     <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
         {{ __('Patient queue') }} ({{ $queue->count() }})
@@ -349,7 +362,7 @@
                         </div>
                         <div class="sm:col-span-6">
                             <label class="mb-1 block text-[11px] font-medium text-slate-500">{{ __('Finish date') }} *</label>
-                            <input type="date" name="drugs[][FinishDate]" required data-row-finish
+                            <input type="date" name="drugs[][FinishDate]" value="{{ now()->toDateString() }}" required data-row-finish
                                    class="w-full rounded-lg border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none">
                         </div>
                     </div>
