@@ -10,17 +10,31 @@ class BedSeeder extends Seeder
     public function run(): void
     {
         // ลบเตียงเก่าแบบ B* ที่ไม่ตรงสเปคใหม่ และเตียงที่เลขไม่เริ่ม 101,201...
-        DB::table('Bed')->where('Bed_No', 'like', 'B%')->delete();
+        // ต้องเคลียร์ FK InPatient.Bed_No ก่อนลบ Bed (InPatient.Bed_No -> Bed.Bed_No)
+        $oldBeds = DB::table('Bed')->where('Bed_No', 'like', 'B%')->pluck('Bed_No');
+        if ($oldBeds->isNotEmpty()) {
+            DB::table('InPatient')->whereIn('Bed_No', $oldBeds)->update(['Bed_No' => null]);
+            DB::table('Bed')->whereIn('Bed_No', $oldBeds)->delete();
+        }
 
         // ลบเตียงเก่าที่เลขไม่ตรงรูปแบบใหม่ (เช่น 500 แทน 501) เพื่อแก้ให้เริ่ม 101 ตามคำขอ
         foreach (['WD01','WD02','WD03','WD04','WD05','WD06','WD07'] as $ward) {
             $wardNum = (int) substr($ward, 2);
             $base = $wardNum * 100; // 100, 200, ...
-            // ลบเตียงที่ลงท้ายด้วย 00 (เช่น 500) ซึ่งควรเริ่ม 501
-            DB::table('Bed')->where('Wd_No', $ward)->where('Bed_No', (string) $base)->delete();
+            $baseBed = (string) $base;
+            $exists = DB::table('Bed')->where('Wd_No', $ward)->where('Bed_No', $baseBed)->exists();
+            if ($exists) {
+                DB::table('InPatient')->where('Bed_No', $baseBed)->update(['Bed_No' => null]);
+                DB::table('Bed')->where('Wd_No', $ward)->where('Bed_No', $baseBed)->delete();
+            }
         }
         // ลบเตียงของวอร์ดที่ถูกลบ (WD08/WD09)
-        DB::table('Bed')->whereIn('Wd_No', ['WD08','WD09'])->delete();
+        $toDeleteWards = ['WD08','WD09'];
+        $wardBeds = DB::table('Bed')->whereIn('Wd_No', $toDeleteWards)->pluck('Bed_No');
+        if ($wardBeds->isNotEmpty()) {
+            DB::table('InPatient')->whereIn('Bed_No', $wardBeds)->update(['Bed_No' => null]);
+        }
+        DB::table('Bed')->whereIn('Wd_No', $toDeleteWards)->delete();
 
         $beds = [];
 

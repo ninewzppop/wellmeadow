@@ -89,7 +89,7 @@ class ClinicalSeeder extends Seeder
         DB::table('Outpatient')->updateOrInsert(['Appt_out_No' => 'A001'], []);
 
         DB::table('InPatient')->updateOrInsert(['In_Pt_No' => 'IP001'], [
-            'Pt_No' => 'PT002', 'Bed_No' => 'B101', 'DateWaitList' => '2026-07-01',
+            'Pt_No' => 'PT002', 'Bed_No' => '101', 'DateWaitList' => '2026-07-01',
             'ExpStayDays' => 5, 'DatePlaced' => '2026-08-01', 'DateLeave' => null, 'ActDateLeft' => null,
         ]);
     }
