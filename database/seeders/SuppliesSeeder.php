@@ -53,19 +53,7 @@ class SuppliesSeeder extends Seeder
         DB::table('Drugrequest')->updateOrInsert(['Wd_Req_No' => 'WR01', 'Drug_No' => 'DR01'], ['QtyReq' => 50]);
         DB::table('Drugrequest')->updateOrInsert(['Wd_Req_No' => 'WR02', 'Drug_No' => 'DR02'], ['QtyReq' => 30]);
 
-        DB::table('Medications')->updateOrInsert(['Med_No' => 'M01'], [
-            'Pt_No' => 'PT002', 'Stf_No' => 'S1002', 'Drug_No' => 'DR01',
-            'UnitsPerDay' => 4, 'AdminMethod' => 'Oral', 'StartDate' => '2026-08-10', 'FinishDate' => '2026-08-24',
-        ]);
-        DB::table('Medications')->updateOrInsert(['Med_No' => 'M02'], [
-            'Pt_No' => 'PT001', 'Stf_No' => 'S1002', 'Drug_No' => 'DR03',
-            'UnitsPerDay' => 2, 'AdminMethod' => 'Injection', 'StartDate' => '2026-08-01', 'FinishDate' => '2026-08-31',
-        ]);
-
-        DB::table('PatientAllergy')->updateOrInsert(['Allergy_No' => 'AL01'], [
-            'Pt_No' => 'PT001', 'Drug_No' => 'DR02', 'Allergy_Name' => 'Penicillin',
-            'Reaction' => 'Rash', 'Severity' => 'Moderate', 'DiagDate' => '2026-01-15', 'Rec_Stf_No' => 'S1002',
-        ]);
+        // Medications / PatientAllergy moved to ClinicalSeeder (need Patient FK) — see ClinicalSeeder
     }
 
     private function stockItems(): array
@@ -88,6 +76,17 @@ class SuppliesSeeder extends Seeder
             ['IT14', 'Needle Holder', 'surgical', 'Mayo-Hegar needle holder 16cm', 22, 8, 11.90, 'SUP01'],
             ['IT15', 'Wheelchair', 'non-surgical', 'Folding transit wheelchair', 4, 2, 95.00, 'SUP02'],
             ['IT16', 'Chest Drain Kit', 'surgical', 'Tube thoracostomy kit', 0, 6, 32.00, 'SUP01'],
+            // เพิ่ม 10 รายการใหม่สำหรับทดสอบ (คละ surgical/non-surgical + out/low/normal)
+            ['IT17', 'Ventilator Tubing', 'surgical', 'Disposable ventilator circuit tubing', 5, 10, 18.50, 'SUP01'],
+            ['IT18', 'Alcohol Swabs', 'non-surgical', 'Isopropyl alcohol prep pads (box 200)', 600, 200, 0.12, 'SUP02'],
+            ['IT19', 'Surgical Scissors', 'surgical', 'Curved Metzenbaum scissors 14cm', 0, 8, 12.00, 'SUP01'],
+            ['IT20', 'Disposable Gowns', 'non-surgical', 'Isolation gowns level 2 (pack 50)', 30, 40, 3.80, 'SUP02'],
+            ['IT21', 'ECG Electrodes', 'non-surgical', 'Disposable ECG electrodes (pack 50)', 150, 50, 1.10, 'SUP02'],
+            ['IT22', 'Bone Drill Kit', 'surgical', 'Orthopaedic bone drill set', 2, 5, 145.00, 'SUP01'],
+            ['IT23', 'Specimen Containers', 'non-surgical', 'Sterile 60ml specimen pots', 80, 30, 0.95, 'SUP01'],
+            ['IT24', 'Laparoscopic Trocar', 'surgical', 'Disposable 12mm trocar', 0, 12, 28.00, 'SUP02'],
+            ['IT25', 'Pulse Oximeter', 'non-surgical', 'Fingertip pulse oximeter', 12, 10, 18.00, 'SUP02'],
+            ['IT26', 'Surgical Stapler', 'surgical', 'Skin stapler 35W', 7, 10, 42.00, 'SUP01'],
         ];
     }
 
@@ -112,6 +111,17 @@ class SuppliesSeeder extends Seeder
             ['DR15', 'Cetirizine', 'Antihistamine tablets', '10mg', 'Oral', 260, 100, 0.06, 'SUP02', 600],
             ['DR16', 'Adrenaline', 'Emergency anaphylaxis injection', '1mg/ml', 'Injection', 9, 12, 9.90, 'SUP01', 7],
             ['DR17', 'Diclofenac Gel', 'Topical anti-inflammatory gel', '1%', 'Topical', 140, 50, 2.80, 'SUP02', null],
+            // เพิ่ม 10 รายการใหม่สำหรับทดสอบ (คละ out/low/normal + expired/near/ok/no-expiry)
+            ['DR18', 'Ciprofloxacin', 'Fluoroquinolone antibiotic', '500mg', 'Oral', 0, 25, 0.45, 'SUP02', 120],
+            ['DR19', 'Prednisolone', 'Corticosteroid tablets', '5mg', 'Oral', 18, 20, 0.18, 'SUP02', 20],
+            ['DR20', 'Atropine', 'Antimuscarinic injection', '1mg/ml', 'Injection', 45, 30, 7.20, 'SUP01', 500],
+            ['DR21', 'Lorazepam', 'Sedative tablets', '2mg', 'Oral', 6, 10, 0.65, 'SUP01', 5],
+            ['DR22', 'Erythromycin', 'Macrolide antibiotic', '250mg', 'Oral', 200, 80, 0.25, 'SUP02', -30],
+            ['DR23', 'Midazolam', 'Sedative injection', '5mg/ml', 'Injection', 33, 15, 4.10, 'SUP01', 80],
+            ['DR24', 'Saline Solution', 'IV fluid 0.9% sodium chloride', '0.9%', 'IV', 0, 50, 1.50, 'SUP01', null],
+            ['DR25', 'Losartan', 'Antihypertensive tablets', '50mg', 'Oral', 95, 40, 0.09, 'SUP02', 400],
+            ['DR26', 'Tramadol', 'Opioid analgesic capsules', '50mg', 'Oral', 28, 30, 0.32, 'SUP02', 60],
+            ['DR27', 'Chlorphenamine', 'Antihistamine injection', '10mg/ml', 'Injection', 110, 50, 2.10, 'SUP01', -5],
         ];
     }
 }

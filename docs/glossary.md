@@ -3,8 +3,8 @@
 | Term | Definition |
 |---|---|
 | Stf / Staff | A hospital employee (medical or non-clinical). Primary key `Stf_No`. |
-| Wd / Ward | A hospital ward. Primary key `Wd_No`. |
-| Bed | A physical bed within a ward. `Bed_No`, FK `Wd_No`, `BedStatus`. |
+| Wd / Ward | A hospital ward. Primary key `Wd_No`. 17 wards (WD01-WD17) after ADR-0010; WD01-WD05 + WD08-WD17 =14 beds, WD06-WD07 =15 beds (preserved). |
+| Bed | A physical bed within a ward. `Bed_No`, FK `Wd_No`, `BedStatus`. 240 beds total (801-814 … 1701-1714 for new wards); Bed_No pattern `{wardNum}01..{wardNum}count` (ADR-0010). |
 | Pos / Position | A job position. `Pos_No`, unique `Pos_Name`, `SalaryScale`. |
 | StfPos | A staff member's appointment to a position (salary, hours, contract). |
 | StfQual | A staff member's qualification (type, date, institution). |

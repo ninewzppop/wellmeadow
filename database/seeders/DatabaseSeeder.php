@@ -27,8 +27,8 @@ class DatabaseSeeder extends Seeder
             WdSeeder::class,
             BedSeeder::class,
             StaffSeeder::class,
-            ClinicalSeeder::class,
             SuppliesSeeder::class,
+            ClinicalSeeder::class,
         ]);
     }
 }

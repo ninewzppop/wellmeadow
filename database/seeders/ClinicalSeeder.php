@@ -86,6 +86,21 @@ class ClinicalSeeder extends Seeder
             'Reaction' => 'Anaphylaxis', 'Severity' => 'Severe', 'DiagDate' => '2025-06-10', 'Rec_Stf_No' => 'S1002',
         ]);
 
+        // From SuppliesSeeder (must run after Patient + Pharmaceutical exist)
+        DB::table('Medications')->updateOrInsert(['Med_No' => 'M01'], [
+            'Pt_No' => 'PT002', 'Stf_No' => 'S1002', 'Drug_No' => 'DR01',
+            'UnitsPerDay' => 4, 'AdminMethod' => 'Oral', 'StartDate' => '2026-08-10', 'FinishDate' => '2026-08-24',
+        ]);
+        DB::table('Medications')->updateOrInsert(['Med_No' => 'M02'], [
+            'Pt_No' => 'PT001', 'Stf_No' => 'S1002', 'Drug_No' => 'DR03',
+            'UnitsPerDay' => 2, 'AdminMethod' => 'Injection', 'StartDate' => '2026-08-01', 'FinishDate' => '2026-08-31',
+        ]);
+
+        DB::table('PatientAllergy')->updateOrInsert(['Allergy_No' => 'AL01'], [
+            'Pt_No' => 'PT001', 'Drug_No' => 'DR02', 'Allergy_Name' => 'Penicillin',
+            'Reaction' => 'Rash', 'Severity' => 'Moderate', 'DiagDate' => '2026-01-15', 'Rec_Stf_No' => 'S1002',
+        ]);
+
         DB::table('Outpatient')->updateOrInsert(['Appt_out_No' => 'A001'], []);
 
         DB::table('InPatient')->updateOrInsert(['In_Pt_No' => 'IP001'], [

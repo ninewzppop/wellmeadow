@@ -18,9 +18,9 @@ class BedSeeder extends Seeder
         }
 
         // ลบเตียงเก่าที่เลขไม่ตรงรูปแบบใหม่ (เช่น 500 แทน 501) เพื่อแก้ให้เริ่ม 101 ตามคำขอ
-        foreach (['WD01','WD02','WD03','WD04','WD05','WD06','WD07'] as $ward) {
+        foreach (['WD01','WD02','WD03','WD04','WD05','WD06','WD07','WD08','WD09','WD10','WD11','WD12','WD13','WD14','WD15','WD16','WD17'] as $ward) {
             $wardNum = (int) substr($ward, 2);
-            $base = $wardNum * 100; // 100, 200, ...
+            $base = $wardNum * 100; // 100, 200, ..., 1700
             $baseBed = (string) $base;
             $exists = DB::table('Bed')->where('Wd_No', $ward)->where('Bed_No', $baseBed)->exists();
             if ($exists) {
@@ -28,8 +28,8 @@ class BedSeeder extends Seeder
                 DB::table('Bed')->where('Wd_No', $ward)->where('Bed_No', $baseBed)->delete();
             }
         }
-        // ลบเตียงของวอร์ดที่ถูกลบ (WD08/WD09)
-        $toDeleteWards = ['WD08','WD09'];
+        // ลบเตียงของวอร์ดที่เกิน 17 (WD18+) ถ้ามีหลงเหลือ
+        $toDeleteWards = ['WD18','WD19','WD20'];
         $wardBeds = DB::table('Bed')->whereIn('Wd_No', $toDeleteWards)->pluck('Bed_No');
         if ($wardBeds->isNotEmpty()) {
             DB::table('InPatient')->whereIn('Bed_No', $wardBeds)->update(['Bed_No' => null]);
@@ -38,7 +38,7 @@ class BedSeeder extends Seeder
 
         $beds = [];
 
-        // ทุกวอร์ดใช้เลขตามวอร์ด เริ่ม 101, 201, 501... วอร์ด6-7 เพิ่มเป็น 15 ตามคำขอล่าสุด
+        // 17 วอร์ด: WD01-WD05=14, WD06-WD07=15 (คงเดิม), WD08-WD17=14 (ใหม่) = 240 เตียง
         $allWards = [
             'WD01' => 14,
             'WD02' => 14,
@@ -47,6 +47,16 @@ class BedSeeder extends Seeder
             'WD05' => 14,
             'WD06' => 15,
             'WD07' => 15,
+            'WD08' => 14,
+            'WD09' => 14,
+            'WD10' => 14,
+            'WD11' => 14,
+            'WD12' => 14,
+            'WD13' => 14,
+            'WD14' => 14,
+            'WD15' => 14,
+            'WD16' => 14,
+            'WD17' => 14,
         ];
 
         foreach ($allWards as $ward => $count) {

@@ -7,8 +7,8 @@ Source of truth: `hospital.sql` (converted to migrations on 2026-08-19). 23 tabl
 | Entity | Table | Key attributes | Lifecycle |
 |---|---|---|---|
 | Staff | `Stf` | Stf_No PK, name, contact, DOB, Sex, NIN (unique), **Alloc_Wd_No** (primary ward) | create/edit/delete (children removed first) |
-| Ward | `Wd` | Wd_No PK, Wd_Name, Location, TotalBeds, TelExtension | seeded |
-| Bed | `Bed` | Bed_No PK, Wd_No FK, BedStatus | seeded |
+| Ward | `Wd` | Wd_No PK, Wd_Name, Location, TotalBeds, TelExtension | seeded (17 wards WD01-WD17; WD01-WD05/WD08-WD17=14 beds, WD06-WD07=15 beds — ADR-0010) |
+| Bed | `Bed` | Bed_No PK, Wd_No FK, BedStatus | seeded (240 beds: 101-114…1701-1714 — ADR-0010) |
 | Position | `Pos` | Pos_No PK, Pos_Name (unique), SalaryScale | seeded |
 | Staff Position | `StfPos` | StfPos_No PK, Stf_No FK, Pos_No FK, CurrSalary, HrsPerWk, ContractType, PaymentType | rebuilt on staff save |
 | Qualification | `StfQual` | Qual_No PK, Stf_No FK, Type, QualDate, Institution | rebuilt on staff save |
@@ -239,6 +239,8 @@ schema additions.
 | Pharmaceutical (drug) | `Pharmaceutical` (+ approved `ExpiryDate DATE NULL`) | Drug_No PK, Dosage, AdminMethod, QtyInStock, ReorderLvl, ExpiryDate, Suppl_No FK | create (auto-ID DRnn) / edit / restock / adjust / guarded delete |
 | Stock item (supply) | `CentralStock` (unmodified schema) | Item_No PK, ItemType ∈ {surgical, non-surgical}, Description, QtyInStock, ReorderLvl, Suppl_No FK | create (auto-ID ITnn) / edit / restock / adjust / guarded delete |
 | Stock movement | `StockMovement` (**new**) | id AI PK, Drug_No NULL FK, Item_No NULL FK, QtyChange signed, Note NULL, Moved_By FK users.id NULL, MoveDate | insert-only audit log |
+
+Seeded via `SuppliesSeeder`: 27 drugs (DR01-DR27) + 26 supplies (IT01-IT26) = 53 items after ADR-0011 (was 17+16=33); new 20 items added to preserve old data for test coverage (ADR-0011).
 
 ## Value objects
 
