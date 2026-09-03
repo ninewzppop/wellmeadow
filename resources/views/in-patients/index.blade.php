@@ -17,6 +17,23 @@
         </a>
     </div>
 
+    {{-- Ward availability (no waiting list needed) --}}
+    @php
+        $wardAvailabilityIndex = \App\Models\Wd::orderBy('Wd_Name')->get()->map(function ($w) {
+            $available = \App\Models\Bed::where('Wd_No', $w->Wd_No)->where('BedStatus', 'Available')->count();
+            $total = \App\Models\Bed::where('Wd_No', $w->Wd_No)->count() ?: (int) $w->TotalBeds;
+            return ['ward' => $w, 'available' => $available, 'total' => $total];
+        });
+    @endphp
+    <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        @foreach ($wardAvailabilityIndex as $stat)
+            <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                <p class="text-xs font-medium text-slate-500">{{ $stat['ward']->Wd_Name }}</p>
+                <p class="mt-1 text-lg font-bold {{ $stat['available'] > 0 ? 'text-emerald-600' : 'text-red-600' }}">{{ $stat['available'] }} <span class="text-xs font-normal text-slate-400">/ {{ $stat['total'] }} {{ __('available') }}</span></p>
+            </div>
+        @endforeach
+    </div>
+
     {{-- Filters --}}
     <form method="GET" class="mb-6 flex flex-wrap items-end gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div class="min-w-[200px] flex-1">

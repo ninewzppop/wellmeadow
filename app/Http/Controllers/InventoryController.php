@@ -96,7 +96,10 @@ abstract class InventoryController extends Controller
                 $item->delete();
             });
         } catch (QueryException $e) {
-            if (($e->errorInfo[1] ?? null) == 1451) {
+            $code = $e->errorInfo[1] ?? null;
+            $msg = $e->getMessage();
+            // MySQL: 1451, SQLite: 19 with FOREIGN KEY message
+            if ($code == 1451 || $code == 19 || str_contains($msg, 'FOREIGN KEY') || str_contains($msg, 'foreign key')) {
                 return back()->with('error', __(':name is still referenced by other records and cannot be deleted.', ['name' => $item->Name]));
             }
 

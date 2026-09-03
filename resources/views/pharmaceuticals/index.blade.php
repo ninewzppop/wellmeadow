@@ -44,8 +44,8 @@
                     <th class="px-4 py-3">{{ __('Name') }}</th>
                     <th class="px-4 py-3">{{ __('Dosage') }}</th>
                     <th class="px-4 py-3">{{ __('Method') }}</th>
-                    <th class="px-4 py-3">{{ __('In stock') }}</th>
-                    <th class="px-4 py-3">{{ __('Reorder level') }}</th>
+                    <th class="px-4 py-3 text-right">{{ __('In stock') }}</th>
+                    <th class="px-4 py-3 text-right">{{ __('Reorder level') }}</th>
                     <th class="px-4 py-3">{{ __('Expiry date') }}</th>
                     <th class="px-4 py-3">{{ __('Status') }}</th>
                     <th class="px-4 py-3"></th>
@@ -61,8 +61,8 @@
                         </td>
                         <td class="px-4 py-3 text-slate-600">{{ $drug->Dosage }}</td>
                         <td class="px-4 py-3 text-slate-600">{{ $drug->AdminMethod }}</td>
-                        <td class="px-4 py-3 font-semibold {{ ($drug->QtyInStock ?? 0) === 0 ? 'text-red-600' : 'text-slate-800' }}">{{ $drug->QtyInStock ?? 0 }}</td>
-                        <td class="px-4 py-3 text-slate-600">{{ $drug->ReorderLvl ?? '-' }}</td>
+                        <td class="px-4 py-3 text-right font-semibold {{ ($drug->QtyInStock ?? 0) === 0 ? 'text-red-600' : 'text-slate-800' }}">{{ $drug->QtyInStock ?? 0 }}</td>
+                        <td class="px-4 py-3 text-right text-slate-600">{{ $drug->ReorderLvl ?? '-' }}</td>
                         <td class="px-4 py-3">
                             @if ($drug->ExpiryDate)
                                 <span class="{{ $drug->expiry_status === 'expired' ? 'font-semibold text-rose-700' : ($drug->expiry_status === 'near-expiry' ? 'text-orange-600' : 'text-slate-600') }}">

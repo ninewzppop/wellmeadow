@@ -58,7 +58,10 @@ class InPatientTest extends TestCase
 
         $response->assertRedirect('/in-patients');
 
-        $this->assertDatabaseHas('InPatient', ['In_Pt_No' => 'IP6', 'DateWaitList' => '2026-08-27']);
+        $this->assertDatabaseHas('InPatient', ['In_Pt_No' => 'IP6']);
+        $record = InPatient::where('In_Pt_No', 'IP6')->first();
+        $this->assertNotNull($record);
+        $this->assertEquals('2026-08-27', $record->DateWaitList->format('Y-m-d'));
     }
 
     public function test_store_treats_legacy_zero_padded_codes_numerically(): void
@@ -97,8 +100,9 @@ class InPatientTest extends TestCase
 
         $this->assertDatabaseHas('InPatient', [
             'In_Pt_No' => 'IP2',
-            'DateWaitList' => '2026-08-28',
         ]);
+        $record = InPatient::where('In_Pt_No', 'IP2')->first();
+        $this->assertEquals('2026-08-28', $record->DateWaitList->format('Y-m-d'));
 
         $this->assertDatabaseMissing('InPatient', ['In_Pt_No' => 'IP3']);
     }

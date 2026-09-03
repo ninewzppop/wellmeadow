@@ -272,6 +272,29 @@
                     {{-- Right: order rows --}}
                     <div class="flex flex-col overflow-hidden lg:col-span-3">
                         <div class="flex-1 overflow-y-auto p-4">
+                            {{-- Allergy banner (always visible) --}}
+                            @if ($appt->patient && $appt->patient->allergies->isNotEmpty())
+                                <div class="mb-4 rounded-xl border-2 border-red-200 bg-red-50 p-3">
+                                    <p class="flex items-center gap-1.5 text-xs font-bold text-red-700">⚠️ {{ __('Allergies recorded for this patient') }}</p>
+                                    <div class="mt-1.5 flex flex-wrap gap-1.5">
+                                        @foreach ($appt->patient->allergies as $al)
+                                            <span class="inline-flex items-center gap-1 rounded-full bg-red-600 px-3 py-1 text-xs font-semibold text-white">
+                                                {{ $al->Allergy_Name ?: $al->drug?->Name ?: $al->Drug_No }}
+                                                @if ($al->Severity)
+                                                    <span class="rounded-full bg-white/20 px-1.5 py-0.5 text-[10px]">{{ $al->Severity }}</span>
+                                                @endif
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                    <p class="mt-1.5 text-[11px] text-red-600">{{ __('Review before prescribing. Selecting a matching drug will require confirmation.') }}</p>
+                                </div>
+                            @else
+                                <div class="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                                    <p class="text-xs font-semibold text-emerald-700">✓ {{ __('No allergy history') }}</p>
+                                    <p class="mt-0.5 text-[11px] text-emerald-600">{{ __('No recorded allergies for this patient — checked.') }}</p>
+                                </div>
+                            @endif
+
                             {{-- Apply same dates --}}
                             <label class="mb-3 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2">
                                 <input type="checkbox" data-apply-same-dates class="h-4 w-4 rounded border-blue-300 text-blue-600">
@@ -487,15 +510,18 @@
                     rowsWrap.querySelectorAll('[data-row-start]').forEach(function (el) { if (s) el.value = s; });
                     rowsWrap.querySelectorAll('[data-row-finish]').forEach(function (el) { if (f) el.value = f; });
                 }
-                // allergy
+                // allergy - highlight rows and show warning
                 var hasConflict = false;
-                rowsWrap.querySelectorAll('[data-row-drug]').forEach(function (sel) {
+                rowsWrap.querySelectorAll('[data-row]').forEach(function (row) {
+                    var sel = row.querySelector('[data-row-drug]');
+                    if (!sel) return;
                     var opt = sel.selectedOptions[0];
                     var drugNo = sel.value;
                     var drugName = opt ? (opt.dataset.name || '').trim().toLowerCase() : '';
-                    if (drugNo !== '' && (conflictDrugs.indexOf(drugNo) !== -1 || conflictNames.indexOf(drugName) !== -1)) {
-                        hasConflict = true;
-                    }
+                    var isConflict = drugNo !== '' && (conflictDrugs.indexOf(drugNo) !== -1 || conflictNames.indexOf(drugName) !== -1);
+                    if (isConflict) hasConflict = true;
+                    row.classList.toggle('border-red-400', isConflict);
+                    row.classList.toggle('bg-red-50', isConflict);
                 });
                 warning.classList.toggle('hidden', !hasConflict);
                 if (overrideBox) {

@@ -175,6 +175,21 @@
             </ul>
         </div>
 
+        @if (! empty($consultingAppointments) && $consultingAppointments->isNotEmpty())
+            <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">
+                <p class="text-xs font-bold uppercase tracking-wide text-amber-700">{{ __('Currently consulting') }}</p>
+                <div class="mt-2 space-y-1.5">
+                    @foreach ($consultingAppointments as $consult)
+                        <a href="{{ $consult->patient ? route('patients.show', $consult->patient) : route('rooms.show', $consult->room ?? $consult->Room_No) }}"
+                           class="flex items-center gap-2 rounded-lg bg-white px-3 py-2 text-xs font-semibold text-amber-800 shadow-sm ring-1 ring-amber-200 hover:bg-amber-100">
+                            <span class="h-2 w-2 shrink-0 rounded-full bg-amber-500"></span>
+                            <span class="line-clamp-1">{{ $consult->patient?->full_name ?? $consult->Pt_No }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         {{-- System (Admin only) --}}
         @auth
             @if (auth()->user()->isAdmin())

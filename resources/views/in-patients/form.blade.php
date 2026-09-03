@@ -9,6 +9,27 @@
             {{ $inPatient->exists ? __('Edit Admission') : __('New Admission') }}
         </h1>
 
+        {{-- Ward availability widget (no need to open waiting list) --}}
+        @php
+            $wardAvailability = \App\Models\Wd::orderBy('Wd_Name')->get()->map(function ($w) {
+                $available = \App\Models\Bed::where('Wd_No', $w->Wd_No)->where('BedStatus', 'Available')->count();
+                $total = \App\Models\Bed::where('Wd_No', $w->Wd_No)->count() ?: (int) $w->TotalBeds;
+                $occupied = \App\Models\Bed::where('Wd_No', $w->Wd_No)->where('BedStatus', 'Occupied')->count();
+                return ['ward' => $w, 'available' => $available, 'total' => $total, 'occupied' => $occupied];
+            });
+        @endphp
+        <div class="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-xs font-bold uppercase tracking-wide text-slate-600">{{ __('Ward availability') }} <span class="font-normal text-slate-400">— {{ __('available beds without opening waiting list') }}</span></p>
+            <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                @foreach ($wardAvailability as $stat)
+                    <div class="flex items-center justify-between rounded-lg bg-white px-3 py-2 shadow-sm">
+                        <span class="text-sm font-medium text-slate-700">{{ $stat['ward']->Wd_Name }} <span class="text-xs text-slate-400">({{ $stat['ward']->Wd_No }})</span></span>
+                        <span class="text-sm font-bold {{ $stat['available'] > 0 ? 'text-emerald-600' : 'text-red-600' }}">{{ $stat['available'] }}/{{ $stat['total'] }} {{ __('available') }}</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+
         <form method="POST" action="{{ $inPatient->exists ? route('in-patients.update', $inPatient) : route('in-patients.store') }}">
             @csrf
             @if ($inPatient->exists)

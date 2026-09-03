@@ -43,8 +43,8 @@
                     <th class="px-4 py-3">{{ __('Item No') }}</th>
                     <th class="px-4 py-3">{{ __('Name') }}</th>
                     <th class="px-4 py-3">{{ __('Category') }}</th>
-                    <th class="px-4 py-3">{{ __('In stock') }}</th>
-                    <th class="px-4 py-3">{{ __('Reorder level') }}</th>
+                    <th class="px-4 py-3 text-right">{{ __('In stock') }}</th>
+                    <th class="px-4 py-3 text-right">{{ __('Reorder level') }}</th>
                     <th class="px-4 py-3">{{ __('Supplier') }}</th>
                     <th class="px-4 py-3">{{ __('Status') }}</th>
                     <th class="px-4 py-3"></th>
@@ -63,8 +63,8 @@
                                 {{ \App\Models\CentralStock::itemTypes()[$item->ItemType] ?? $item->ItemType }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 font-semibold {{ ($item->QtyInStock ?? 0) === 0 ? 'text-red-600' : 'text-slate-800' }}">{{ $item->QtyInStock ?? 0 }}</td>
-                        <td class="px-4 py-3 text-slate-600">{{ $item->ReorderLvl ?? '-' }}</td>
+                        <td class="px-4 py-3 text-right font-semibold {{ ($item->QtyInStock ?? 0) === 0 ? 'text-red-600' : 'text-slate-800' }}">{{ $item->QtyInStock ?? 0 }}</td>
+                        <td class="px-4 py-3 text-right text-slate-600">{{ $item->ReorderLvl ?? '-' }}</td>
                         <td class="px-4 py-3 text-slate-600">{{ $item->supplier?->Name }}</td>
                         <td class="px-4 py-3"><x-stock-status-badge :status="$item->stock_status" /></td>
                         <td class="px-4 py-3 text-right whitespace-nowrap">

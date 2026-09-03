@@ -161,6 +161,8 @@ class StaffTest extends TestCase
             'Shift' => 'Evening',
         ])->assertRedirect('/rota');
 
-        $this->assertDatabaseHas('StfRota', ['StfRota_No' => 'R1', 'WkBegin' => '2026-08-24', 'Shift' => 'Evening']);
+        $this->assertDatabaseHas('StfRota', ['StfRota_No' => 'R1', 'Shift' => 'Evening']);
+        $rota = StfRota::where('StfRota_No', 'R1')->first();
+        $this->assertEquals('2026-08-24', $rota->WkBegin->format('Y-m-d'));
     }
 }

@@ -36,6 +36,26 @@
                         </div>
                     @endif
 
+                    @if (! empty($consultingAppointments) && $consultingAppointments->isNotEmpty())
+                        <div class="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 shadow-sm">
+                            <p class="text-xs font-bold uppercase tracking-wide text-amber-700">{{ __('Currently consulting') }}</p>
+                            <div class="mt-2 flex flex-wrap gap-2">
+                                @foreach ($consultingAppointments as $consult)
+                                    <a href="{{ $consult->patient ? route('patients.show', $consult->patient) : route('rooms.show', $consult->room ?? $consult->Room_No) }}"
+                                       class="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-semibold text-amber-800 shadow-sm ring-1 ring-amber-200 hover:bg-amber-100">
+                                        <span class="relative flex h-2 w-2">
+                                            <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-500 opacity-75"></span>
+                                            <span class="relative inline-flex h-2 w-2 rounded-full bg-amber-600"></span>
+                                        </span>
+                                        {{ __('Consulting: :name', ['name' => $consult->patient?->full_name ?? $consult->Pt_No]) }}
+                                        <span class="text-xs font-normal text-amber-600">— {{ $consult->room?->RoomName ?? $consult->Room_No }} · {{ $consult->Appt_No }}</span>
+                                    </a>
+                                @endforeach
+                            </div>
+                            <p class="mt-1 text-[11px] text-amber-600">{{ __('Click to open patient details — no search needed.') }}</p>
+                        </div>
+                    @endif
+
                     @if ($errors->any())
                         <div class="mb-4 rounded border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800">
                             <strong>Please fix the following errors:</strong>

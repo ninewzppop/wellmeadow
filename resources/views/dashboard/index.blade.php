@@ -109,6 +109,29 @@
         </div>
 
         <div class="rounded-lg bg-white p-5 shadow-sm">
+            <p class="mb-4 text-sm font-medium text-slate-500">{{ __('Available beds per ward') }} <span class="text-xs font-normal text-slate-400">— {{ __('no need to open waiting list') }}</span></p>
+            @if ($wardBedStats->isEmpty())
+                <p class="text-sm text-slate-400">{{ __('No wards defined yet.') }}</p>
+            @else
+                <div class="space-y-2">
+                    @foreach ($wardBedStats as $stat)
+                        <div class="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2">
+                            <div>
+                                <p class="text-sm font-semibold text-slate-800">{{ $stat['ward']->Wd_Name }}</p>
+                                <p class="text-xs text-slate-400">{{ $stat['ward']->Wd_No }} · {{ $stat['ward']->Location ?? '—' }}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold {{ $stat['available'] > 0 ? 'text-emerald-600' : 'text-red-600' }}">{{ $stat['available'] }} {{ __('available') }} / {{ $stat['total'] }}</p>
+                                <p class="text-xs text-slate-400">{{ $stat['occupied'] }} {{ __('occupied') }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                <a href="{{ route('wards.index') }}" class="mt-3 inline-block text-xs font-medium text-blue-600 hover:underline">{{ __('View all wards') }} →</a>
+            @endif
+        </div>
+
+        <div class="rounded-lg bg-white p-5 shadow-sm">
             <p class="mb-4 text-sm font-medium text-slate-500">{{ __('Stock/medication near reorder level') }}</p>
             @if ($reorderAlerts->isEmpty() && $lowDrugs->isEmpty())
                 <p class="text-sm text-slate-400">{{ __('No items near the reorder level') }}</p>

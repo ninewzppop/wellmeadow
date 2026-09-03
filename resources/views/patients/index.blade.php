@@ -17,25 +17,47 @@
         </a>
     </div>
 
-    {{-- Search --}}
-    <form method="GET" class="mb-4 flex gap-2">
-        <input
-            type="search"
-            name="search"
-            value="{{ request('search') }}"
-            placeholder="{{ __('Search by ID, name, phone...') }}"
-            class="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-        >
-        <button type="submit"
-                class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
-            {{ __('Search') }}
-        </button>
-        @if (request('search'))
-            <a href="{{ route('patients.index') }}"
-               class="rounded-lg px-4 py-2 text-sm font-medium text-slate-500 hover:bg-slate-100">
-                {{ __('Clear') }}
-            </a>
-        @endif
+    {{-- Search + Sort/Filter --}}
+    <form method="GET" class="mb-4 flex flex-wrap items-end gap-2 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="min-w-[200px]">
+            <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Search') }}</label>
+            <input type="search" name="search" value="{{ request('search') }}" placeholder="{{ __('Search by ID, name, phone...') }}"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+        </div>
+
+        <div>
+            <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Order by') }}</label>
+            <select name="sort" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                <option value="pt_no" {{ $sort === 'pt_no' ? 'selected' : '' }}>{{ __('Patient No.') }}</option>
+                <option value="name" {{ $sort === 'name' ? 'selected' : '' }}>{{ __('Name') }}</option>
+                <option value="datereg" {{ $sort === 'datereg' ? 'selected' : '' }}>{{ __('Registration date') }}</option>
+                <option value="tel" {{ $sort === 'tel' ? 'selected' : '' }}>{{ __('Telephone') }}</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Direction') }}</label>
+            <select name="direction" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                <option value="asc" {{ $direction === 'asc' ? 'selected' : '' }}>{{ __('Asc') }} ↑</option>
+                <option value="desc" {{ $direction === 'desc' ? 'selected' : '' }}>{{ __('Desc') }} ↓</option>
+            </select>
+        </div>
+
+        <div>
+            <label class="mb-1 block text-xs font-medium text-slate-500">{{ __('Local Doctor') }}</label>
+            <select name="clinic_no" class="rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                <option value="">{{ __('All doctors') }}</option>
+                @foreach ($doctors as $doc)
+                    <option value="{{ $doc->Clinic_No }}" {{ request('clinic_no') == $doc->Clinic_No ? 'selected' : '' }}>{{ $doc->full_name }} ({{ $doc->Clinic_No }})</option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="flex gap-2 pb-0.5">
+            <button type="submit" class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">{{ __('Apply') }}</button>
+            <a href="{{ route('patients.index') }}" class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200">{{ __('Clear') }}</a>
+        </div>
+        <p class="w-full text-xs text-slate-400">{{ __('Sorting via backend query') }}: <span class="font-semibold text-slate-600">{{ match($sort){ 'name'=>'Name', 'pt_no'=>'Patient No.', 'datereg'=>'Registration date', 'tel'=>'Telephone', default=>$sort } }} ({{ $direction }})</span> — {{ __('default: newest first (Patient No. desc)') }}</p>
     </form>
 
     @if ($patients->isEmpty())

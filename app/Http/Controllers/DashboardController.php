@@ -8,6 +8,7 @@ use App\Models\CentralStock;
 use App\Models\Patient;
 use App\Models\Pharmaceutical;
 use App\Models\StfRota;
+use App\Models\Wd;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 
@@ -41,6 +42,19 @@ class DashboardController extends Controller
             ->selectRaw('ApptDate as date, count(*) as total')
             ->groupBy('date')
             ->pluck('total', 'date');
+
+        $wardBedStats = Wd::orderBy('Wd_Name')->get()->map(function (Wd $ward) {
+            $beds = Bed::where('Wd_No', $ward->Wd_No);
+            $total = (int) $beds->count();
+            $available = (int) Bed::where('Wd_No', $ward->Wd_No)->where('BedStatus', 'Available')->count();
+            $occupied = (int) Bed::where('Wd_No', $ward->Wd_No)->where('BedStatus', 'Occupied')->count();
+            return [
+                'ward' => $ward,
+                'total' => $total ?: (int) $ward->TotalBeds,
+                'available' => $available,
+                'occupied' => $occupied,
+            ];
+        });
 
         return view('dashboard.index', [
             'totalPatients' => Patient::count(),
@@ -80,6 +94,7 @@ class DashboardController extends Controller
                 'patientLabel' => __('New patients'),
                 'appointmentLabel' => __('Appointments'),
             ],
+            'wardBedStats' => $wardBedStats,
         ]);
     }
 }

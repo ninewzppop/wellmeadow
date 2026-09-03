@@ -35,12 +35,15 @@ class PatientTest extends TestCase
         $response = $this->post('/patients', $this->validPayload());
 
         $response->assertRedirect('/patients');
+        $response->assertSessionHas('status');
 
         $this->assertDatabaseHas('Patient', [
             'Pt_No' => 'PT1',
             'FirstName' => 'John',
             'LastName' => 'Doe',
         ]);
+        // Status message should contain the generated ID (visible after Save)
+        $this->assertStringContainsString('PT1', session('status') ?? '');
     }
 
     public function test_store_generates_sequential_numbers(): void
@@ -88,7 +91,11 @@ class PatientTest extends TestCase
         $response = $this->get('/patients/create');
 
         $response->assertOk();
-        $response->assertSee('value="PT5"', false);
+        // After fix #2, Pt_No is no longer previewed during form fill — should show placeholder instead of PT5
+        $response->assertDontSee('value="PT5"', false);
+        $response->assertSee(__('Auto-generated after save'));
+        // Verify the No. field is empty/disabled, not pre-filled
+        $response->assertSee('placeholder="Auto-generated after save"', false);
     }
 
     public function test_update_does_not_change_patient_no(): void

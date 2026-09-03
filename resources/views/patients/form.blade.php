@@ -30,12 +30,16 @@
                 <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:col-span-2">
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Patient No.') }}</label>
-                        <input type="text" value="{{ $patient->exists ? $patient->Pt_No : $nextPtNo }}" disabled
-                               placeholder="{{ __('Auto-generated') }}"
-                               class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
-                        <p class="mt-1 text-xs text-slate-400">
-                            {{ $patient->exists ? __('Cannot be changed after creation') : __('Generated automatically when saved') }}
-                        </p>
+                        @if ($patient->exists)
+                            <input type="text" value="{{ $patient->Pt_No }}" disabled
+                                   class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
+                            <p class="mt-1 text-xs text-slate-400">{{ __('Cannot be changed after creation') }}</p>
+                        @else
+                            <input type="text" value="" disabled
+                                   placeholder="{{ __('Auto-generated after save') }}"
+                                   class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
+                            <p class="mt-1 text-xs text-slate-400">{{ __('Will be generated automatically when saved') }}</p>
+                        @endif
                     </div>
 
                     <div>
@@ -119,14 +123,20 @@
 
                     <div class="sm:col-span-2">
                         <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Local Doctor') }}</label>
-                        <select name="Clinic_No" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
-                            <option value="">{{ __('Select') }}</option>
-                            @foreach ($doctors as $doctor)
-                                <option value="{{ $doctor->Clinic_No }}" {{ old('Clinic_No', $patient->Clinic_No) == $doctor->Clinic_No ? 'selected' : '' }}>
-                                    {{ $doctor->full_name }} ({{ $doctor->Clinic_No }})
-                                </option>
-                            @endforeach
-                        </select>
+                        @php
+                            $selectedDoctor = $doctors->firstWhere('Clinic_No', old('Clinic_No', $patient->Clinic_No));
+                            $doctorOptions = $doctors->map(fn ($d) => ['id' => $d->Clinic_No, 'label' => $d->full_name.' ('.$d->Clinic_No.')'])->values();
+                        @endphp
+                        <div data-doctor-select class="relative">
+                            <input type="hidden" name="Clinic_No" value="{{ old('Clinic_No', $patient->Clinic_No) }}" data-doctor-value>
+                            <input type="text" autocomplete="off" data-doctor-search
+                                   value="{{ $selectedDoctor ? $selectedDoctor->full_name.' ('.$selectedDoctor->Clinic_No.')' : '' }}"
+                                   placeholder="{{ __('Type to search doctor...') }}"
+                                   data-doctor-options="{{ json_encode($doctorOptions) }}"
+                                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none">
+                            <div data-doctor-list class="absolute z-20 mt-1 hidden max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white py-1 shadow-lg"></div>
+                        </div>
+                        <p class="mt-1 text-xs text-slate-400">{{ __('Search and select — no need to leave this page.') }}</p>
                         @error('Clinic_No')
                             <p class="mt-1 text-sm text-red-500">{{ $message }}</p>
                         @enderror
@@ -175,4 +185,47 @@
         </form>
     </div>
 </div>
+@push('scripts')
+<script>
+    document.querySelectorAll('[data-doctor-select]').forEach(function (wrap) {
+        var input = wrap.querySelector('[data-doctor-search]');
+        var hidden = wrap.querySelector('[data-doctor-value]');
+        var list = wrap.querySelector('[data-doctor-list]');
+        var doctors = JSON.parse(input.dataset.doctorOptions || '[]');
+        function render(q) {
+            q = (q || '').trim().toLowerCase();
+            var matches = doctors.filter(function (d) { return d.label.toLowerCase().indexOf(q) !== -1; }).slice(0, 50);
+            list.innerHTML = '';
+            if (!matches.length) {
+                var empty = document.createElement('div');
+                empty.className = 'px-3 py-2 text-sm text-slate-400';
+                empty.textContent = @json(__('No matching doctor.'));
+                list.appendChild(empty);
+            }
+            matches.forEach(function (d) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-slate-100';
+                btn.textContent = d.label;
+                btn.addEventListener('mousedown', function (e) {
+                    e.preventDefault();
+                    hidden.value = d.id;
+                    input.value = d.label;
+                    list.classList.add('hidden');
+                });
+                list.appendChild(btn);
+            });
+            list.classList.remove('hidden');
+        }
+        input.addEventListener('focus', function () { render(input.value); });
+        input.addEventListener('input', function () { hidden.value = ''; render(input.value); });
+        input.addEventListener('blur', function () { setTimeout(function () { list.classList.add('hidden'); }, 150); });
+        // clear if typed text does not match hidden value
+        input.addEventListener('change', function () {
+            var exact = doctors.find(function (d) { return d.label === input.value; });
+            if (!exact && input.value.trim() === '') hidden.value = '';
+        });
+    });
+</script>
+@endpush
 @endsection
