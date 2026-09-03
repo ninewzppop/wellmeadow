@@ -55,7 +55,7 @@ class InPatientController extends Controller
 
         $inPatients = $query->paginate(15)->withQueryString();
 
-        $wards = Wd::orderBy('Wd_Name')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
         $statuses = ['current', 'discharged', 'waiting'];
 
         return view('in-patients.index', compact('inPatients', 'wards', 'statuses'));
@@ -65,7 +65,7 @@ class InPatientController extends Controller
     {
         $patients = Patient::orderBy('LastName')->orderBy('FirstName')->get();
         $beds = Bed::with('ward')->where('BedStatus', 'Available')->orderBy('Bed_No')->get();
-        $wards = Wd::orderBy('Wd_Name')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         return view('in-patients.form', [
             'inPatient' => new InPatient,
@@ -106,7 +106,7 @@ class InPatientController extends Controller
             $q->where('BedStatus', 'Available')
                 ->orWhere('Bed_No', $inPatient->Bed_No);
         })->orderBy('Bed_No')->get();
-        $wards = Wd::orderBy('Wd_Name')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         return view('in-patients.form', compact('inPatient', 'patients', 'beds', 'wards'));
     }

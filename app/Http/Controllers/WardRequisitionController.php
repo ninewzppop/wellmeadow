@@ -33,7 +33,7 @@ class WardRequisitionController extends Controller
         }
 
         $requisitions = $query->paginate(15)->withQueryString();
-        $wards = Wd::orderBy('Wd_Name')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         return view('requisitions.index', compact('requisitions', 'wards'));
     }
@@ -50,14 +50,14 @@ class WardRequisitionController extends Controller
         }
 
         $requisitions = $query->paginate(15)->withQueryString();
-        $wards = Wd::orderBy('Wd_Name')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         return view('requisitions.history', compact('requisitions', 'wards'));
     }
 
     public function report(Request $request): View
     {
-        $wards = Wd::orderBy('Wd_Name')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
         $selectedWard = $request->query('ward');
         $dateFrom = $request->query('date_from');
         $dateTo = $request->query('date_to');
@@ -88,7 +88,7 @@ class WardRequisitionController extends Controller
     {
         return view('requisitions.form', [
             'requisition' => new Wardrequisition(['DateOrd' => now()->toDateString(), 'status' => Wardrequisition::STATUS_PENDING]),
-            'wards' => Wd::orderBy('Wd_Name')->get(),
+            'wards' => Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values(),
             'staff' => Stf::orderBy('LastName')->get(),
             'supplies' => CentralStock::orderBy('Name')->get(),
             'drugs' => Pharmaceutical::orderBy('Name')->get(),
@@ -155,7 +155,7 @@ class WardRequisitionController extends Controller
 
         return view('requisitions.form', [
             'requisition' => $requisition,
-            'wards' => Wd::orderBy('Wd_Name')->get(),
+            'wards' => Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values(),
             'staff' => Stf::orderBy('LastName')->get(),
             'supplies' => CentralStock::orderBy('Name')->get(),
             'drugs' => Pharmaceutical::orderBy('Name')->get(),

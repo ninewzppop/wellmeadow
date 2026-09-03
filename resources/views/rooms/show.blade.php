@@ -15,7 +15,7 @@
             <p class="mt-1 text-sm text-slate-500">{{ $room->Location ?? '—' }}</p>
         </div>
 
-        {{-- Selected date (chosen on the board) + add to queue --}}
+        {{-- Selected date (chosen on the board) + add to queue + report --}}
         <div class="flex flex-wrap items-stretch gap-3">
             <div class="flex flex-col justify-center rounded-2xl border border-slate-200 bg-white px-5 py-3 shadow-sm">
                 <span class="text-[11px] font-medium uppercase tracking-wide text-slate-400">{{ __('Queue date') }}</span>
@@ -25,6 +25,7 @@
                     {{ __('Change date') }}
                 </a>
             </div>
+            <x-report-button :href="route('reports.consult', ['room' => $room->Room_No, 'date' => $date->toDateString()])" />
             <a href="{{ route('appointments.create', ['room' => $room->Room_No, 'date' => $date->toDateString()]) }}"
                class="flex items-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
                 <span aria-hidden="true">+</span> {{ __('Add to queue') }}

@@ -20,7 +20,8 @@
             </div>
         </div>
 
-        <div class="flex gap-2">
+        <div class="flex items-center gap-2">
+            <x-report-button :href="route('reports.ward', $ward)" />
             <span class="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-700">
                 {{ $available }} available
             </span>

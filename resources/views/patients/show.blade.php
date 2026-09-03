@@ -11,6 +11,7 @@
             <p class="mt-1 text-sm text-slate-500">{{ __('Patient No.') }}: {{ $patient->Pt_No }}</p>
         </div>
         <div class="flex gap-2">
+            <x-report-button :href="route('reports.patient', $patient)" />
             <a href="{{ route('patients.edit', $patient) }}"
                class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-700">
                 {{ __('Edit') }}

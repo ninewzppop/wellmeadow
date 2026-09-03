@@ -11,6 +11,7 @@
                 Manage hospital wards and bed location
             </p>
         </div>
+        <x-report-button :href="route('reports.wards')" />
     </div>
 
     {{-- Ward cards grid --}}

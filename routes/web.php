@@ -17,6 +17,7 @@ use App\Http\Controllers\StaffController;
 use App\Http\Controllers\StaffSearchController;
 use App\Http\Controllers\StockController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\WardController;
 use App\Http\Controllers\WardReportController;
 use App\Http\Controllers\WardRequisitionController;
@@ -40,6 +41,15 @@ Route::middleware('auth')->group(function () {
     Route::get('wards', [WardController::class, 'index'])->name('wards.index');
     Route::get('wards/report', [WardReportController::class, 'show'])->name('wards.report');
     Route::get('wards/{ward}', [WardController::class, 'show'])->name('wards.show');
+
+    // Print-friendly reports (context-specific)
+    Route::get('reports/patients', [ReportController::class, 'patients'])->name('reports.patients');
+    Route::get('reports/patients/{patient}', [ReportController::class, 'patient'])->name('reports.patient');
+    Route::get('reports/rooms/{room}', [ReportController::class, 'consult'])->name('reports.consult');
+    Route::get('reports/stock', [ReportController::class, 'stock'])->name('reports.stock');
+    Route::get('reports/pharmacy', [ReportController::class, 'pharmacy'])->name('reports.pharmacy');
+    Route::get('reports/wards', [ReportController::class, 'wards'])->name('reports.wards');
+    Route::get('reports/wards/{ward}', [ReportController::class, 'ward'])->name('reports.ward');
 
     // Placeholder routes for pages that will be built later (menu wiring only).
     Route::resource('patients', PatientController::class);

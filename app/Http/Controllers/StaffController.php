@@ -28,7 +28,7 @@ class StaffController extends Controller
     public function create(): View
     {
         $positions = Pos::orderBy('Pos_Name')->get();
-        $wards = Wd::orderBy('Wd_Name')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         return view('staff.form', ['staff' => new Stf, 'positions' => $positions, 'wards' => $wards]);
     }
@@ -50,7 +50,7 @@ class StaffController extends Controller
         $staff->load(['qualifications', 'workExperiences', 'positions.pos', 'assignedWard']);
 
         $positions = Pos::orderBy('Pos_Name')->get();
-        $wards = Wd::orderBy('Wd_Name')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         return view('staff.form', compact('staff', 'positions', 'wards'));
     }

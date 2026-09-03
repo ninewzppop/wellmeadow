@@ -5,10 +5,13 @@
 @section('content')
     <div class="mb-6 flex items-center justify-between">
         <h1 class="text-2xl font-bold text-[#112D6E]">{{ __('Stock') }}</h1>
-        <a href="{{ route('stock.create') }}"
-           class="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700">
-            {{ __('+ New item') }}
-        </a>
+        <div class="flex items-center gap-2">
+            <x-report-button :href="route('reports.stock', request()->query())" />
+            <a href="{{ route('stock.create') }}"
+               class="rounded bg-sky-600 px-4 py-2 text-sm font-medium text-white hover:bg-sky-700">
+                {{ __('+ New item') }}
+            </a>
+        </div>
     </div>
 
     <x-inventory-dashboard :counts="$counts" :urgent="$urgent" base-route="stock" />

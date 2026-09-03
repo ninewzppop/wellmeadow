@@ -11,10 +11,13 @@
                 {{ __('Manage hospital patient records and registrations') }}
             </p>
         </div>
-        <a href="{{ route('patients.create') }}"
-           class="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
-            <span aria-hidden="true">+</span> {{ __('Register Patient') }}
-        </a>
+        <div class="flex items-center gap-2">
+            <x-report-button :href="route('reports.patients', request()->query())" />
+            <a href="{{ route('patients.create') }}"
+               class="flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+                <span aria-hidden="true">+</span> {{ __('Register Patient') }}
+            </a>
+        </div>
     </div>
 
     {{-- Search + Sort/Filter --}}

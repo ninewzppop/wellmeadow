@@ -11,7 +11,7 @@
         </div>
         <div class="flex gap-2">
             <a href="{{ route('requisitions.history') }}" class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200">{{ __('History') }}</a>
-            <a href="{{ route('requisitions.report') }}" class="rounded-lg bg-slate-100 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-200">{{ __('Report') }}</a>
+            <x-report-button :href="route('requisitions.report')" />
             <a href="{{ route('requisitions.create') }}" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">+ {{ __('New Requisition') }}</a>
         </div>
     </div>

@@ -11,7 +11,7 @@ class WardController extends Controller
 {
     public function index(): View
     {
-        $wards = Wd::orderBy('Wd_No')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         $bedStats = Bed::query()
             ->selectRaw('Wd_No, SUM(BedStatus = "Occupied") AS occupied_beds, SUM(BedStatus = "Available") AS available_beds')

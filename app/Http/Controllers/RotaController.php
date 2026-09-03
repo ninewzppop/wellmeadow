@@ -28,7 +28,7 @@ class RotaController extends Controller
 
         $conflicts = $this->conflictingAssignments($rotas);
         $staff = Stf::orderBy('LastName')->orderBy('FirstName')->get();
-        $wards = Wd::orderBy('Wd_Name')->get();
+        $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         return view('rota.index', compact('rotas', 'weekBeginning', 'conflicts', 'staff', 'wards', 'editId'));
     }
