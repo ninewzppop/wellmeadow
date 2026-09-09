@@ -48,7 +48,7 @@
                                     <span class="block text-xs text-slate-400">{{ $order->Order_No }}</span>
                                 </td>
                                 <td class="px-5 py-3">
-                                    <span class="font-semibold text-slate-900">{{ $order->patient?->full_name ?? '—' }}</span>
+                                    <span class="font-semibold text-slate-900"><x-patient-link :patient="$order->patient" /></span>
                                     <span class="block text-xs text-slate-400">{{ __('HN') }} {{ $order->Pt_No }}</span>
                                 </td>
                                 <td class="px-5 py-3 text-slate-600">{{ $order->prescriber?->full_name ?? $order->Stf_No ?? '—' }}</td>

@@ -8,6 +8,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class PatientController extends Controller
@@ -15,6 +16,12 @@ class PatientController extends Controller
     public function index(Request $request): View
     {
         $query = Patient::with(['localDoctor', 'appointments', 'inPatients.bed', 'nextOfKins', 'allergies']);
+
+        // Role scope: doctors see own patients, ward roles see ward-linked patients (null = all).
+        $ids = $request->user()->accessiblePatientIds();
+        if ($ids !== null) {
+            $query->whereIn('Pt_No', $ids);
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -80,8 +87,12 @@ class PatientController extends Controller
             ->with('status', __('Created patient :name with ID :id.', ['name' => $patient->full_name, 'id' => $patient->Pt_No]));
     }
 
-    public function show(Patient $patient): View
+    public function show(Patient $patient): View|RedirectResponse
     {
+        if (Gate::denies('view', $patient)) {
+            return redirect()->route('forbidden');
+        }
+
         $patient->load([
             'localDoctor',
             'appointments.consultant',
@@ -97,8 +108,12 @@ class PatientController extends Controller
         return view('patients.show', compact('patient'));
     }
 
-    public function edit(Patient $patient): View
+    public function edit(Patient $patient): View|RedirectResponse
     {
+        if (Gate::denies('update', $patient)) {
+            return redirect()->route('forbidden');
+        }
+
         $doctors = LocalDr::orderBy('LastName')->orderBy('FirstName')->get();
 
         return view('patients.form', compact('patient', 'doctors'));
@@ -106,6 +121,10 @@ class PatientController extends Controller
 
     public function update(Request $request, Patient $patient): RedirectResponse
     {
+        if (Gate::denies('update', $patient)) {
+            return redirect()->route('forbidden');
+        }
+
         $data = $this->validatePatient($request);
 
         $patient->update($data);
@@ -116,6 +135,10 @@ class PatientController extends Controller
 
     public function destroy(Patient $patient): RedirectResponse
     {
+        if (Gate::denies('delete', $patient)) {
+            return redirect()->route('forbidden');
+        }
+
         $name = $patient->full_name;
 
         $patient->delete();

@@ -23,6 +23,7 @@ class StaffTest extends TestCase
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password123',
+            'role' => 'medical_director',
         ]));
     }
 
@@ -32,7 +33,6 @@ class StaffTest extends TestCase
         Wd::create(['Wd_No' => 'WD01', 'Wd_Name' => 'Cardiology', 'Location' => 'A1', 'TotalBeds' => 30, 'TelExtension' => '1']);
 
         $response = $this->post('/staff', [
-            'Stf_No' => 'S2001',
             'FirstName' => 'John',
             'LastName' => 'Doe',
             'Address' => '1 Test Street',
@@ -54,10 +54,22 @@ class StaffTest extends TestCase
 
         $response->assertRedirect('/staff');
 
-        $this->assertDatabaseHas('Stf', ['Stf_No' => 'S2001', 'LastName' => 'Doe', 'Alloc_Wd_No' => 'WD01']);
-        $this->assertDatabaseHas('StfQual', ['Stf_No' => 'S2001', 'Type' => 'BSc Nursing']);
-        $this->assertDatabaseHas('StfWorkExp', ['Stf_No' => 'S2001', 'Organization' => 'Local Hospital']);
-        $this->assertDatabaseHas('StfPos', ['Stf_No' => 'S2001', 'Pos_No' => 'P001']);
+        // Stf_No is auto-generated server-side (S1001, S1002, …).
+        $staff = Stf::first();
+        $this->assertNotNull($staff);
+        $this->assertMatchesRegularExpression('/^S\d+$/', $staff->Stf_No);
+        $this->assertDatabaseHas('Stf', ['Stf_No' => $staff->Stf_No, 'LastName' => 'Doe', 'Alloc_Wd_No' => 'WD01']);
+        $this->assertDatabaseHas('StfQual', ['Stf_No' => $staff->Stf_No, 'Type' => 'BSc Nursing']);
+        $this->assertDatabaseHas('StfWorkExp', ['Stf_No' => $staff->Stf_No, 'Organization' => 'Local Hospital']);
+        $this->assertDatabaseHas('StfPos', ['Stf_No' => $staff->Stf_No, 'Pos_No' => 'P001']);
+    }
+
+    public function test_create_page_hides_auto_generated_staff_no(): void
+    {
+        $response = $this->get('/staff/create');
+
+        $response->assertOk();
+        $response->assertDontSee(__('Staff No *'));
     }
 
     public function test_staff_can_be_updated(): void
@@ -65,7 +77,6 @@ class StaffTest extends TestCase
         $staff = Stf::create(['Stf_No' => 'S2002', 'FirstName' => 'Jane', 'LastName' => 'Roe']);
 
         $this->put('/staff/S2002', [
-            'Stf_No' => 'S2002',
             'FirstName' => 'Jane',
             'LastName' => 'Roe-Smith',
             'Address' => null,

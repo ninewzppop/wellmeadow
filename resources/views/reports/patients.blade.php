@@ -25,7 +25,7 @@
         @forelse($patients as $p)
             <tr>
                 <td style="font-family:monospace;">{{ $p->Pt_No }}</td>
-                <td><strong>{{ $p->full_name }}</strong></td>
+                <td><strong><x-patient-link :patient="$p" /></strong></td>
                 <td>{{ $p->DOB?->format('d/m/Y') ?? '-' }}</td>
                 <td>{{ $p->Sex ?? '-' }}</td>
                 <td>{{ $p->TelNo ?? '-' }}</td>

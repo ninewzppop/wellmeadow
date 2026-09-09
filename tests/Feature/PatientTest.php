@@ -18,6 +18,7 @@ class PatientTest extends TestCase
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password123',
+            'role' => 'medical_director',
         ]));
     }
 
@@ -84,18 +85,36 @@ class PatientTest extends TestCase
         $this->assertDatabaseHas('Patient', ['Pt_No' => 'PT11']);
     }
 
-    public function test_create_page_previews_next_patient_no(): void
+    public function test_patient_names_link_to_patient_details(): void
+    {
+        $patient = Patient::create(['Pt_No' => 'PT1', 'FirstName' => 'John', 'LastName' => 'Doe']);
+        \App\Models\Stf::create(['Stf_No' => 'S1001', 'FirstName' => 'Dr', 'LastName' => 'Who']);
+        \App\Models\Room::create(['Room_No' => 'R001', 'RoomName' => 'Room 1']);
+        \App\Models\Appointment::create([
+            'Appt_No' => 'A1', 'Pt_No' => 'PT1', 'Consult_Stf_No' => 'S1001',
+            'ApptDate' => now()->toDateString(), 'ApptTime' => '09:00',
+            'Room_No' => 'R001', 'status' => \App\Models\Appointment::STATUS_SCHEDULED,
+        ]);
+
+        $detailUrl = route('patients.show', $patient);
+
+        $this->get('/patients')->assertOk()->assertSee('href="'.$detailUrl.'"', false);
+        $this->get('/appointments')->assertOk()->assertSee('href="'.$detailUrl.'"', false);
+        $this->get('/rooms/R001')->assertOk()->assertSee('href="'.$detailUrl.'"', false);
+        $this->get($detailUrl)->assertOk()->assertSee('John Doe');
+    }
+
+    public function test_create_page_hides_auto_generated_patient_no(): void
     {
         Patient::create(['Pt_No' => 'PT4', 'FirstName' => 'Four', 'LastName' => 'Patient']);
 
         $response = $this->get('/patients/create');
 
         $response->assertOk();
-        // After fix #2, Pt_No is no longer previewed during form fill — should show placeholder instead of PT5
+        // Auto-generated Pt_No must not be shown or previewed on the add page.
         $response->assertDontSee('value="PT5"', false);
-        $response->assertSee(__('Auto-generated after save'));
-        // Verify the No. field is empty/disabled, not pre-filled
-        $response->assertSee('placeholder="Auto-generated after save"', false);
+        $response->assertDontSee(__('Patient No.'));
+        $response->assertDontSee('Auto-generated after save');
     }
 
     public function test_update_does_not_change_patient_no(): void

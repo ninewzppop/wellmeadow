@@ -86,7 +86,7 @@
                         @foreach ($patients as $patient)
                             <tr class="hover:bg-slate-50">
                                 <td class="px-6 py-4 font-medium text-slate-700">{{ $patient->Pt_No }}</td>
-                                <td class="px-6 py-4 font-semibold text-slate-900">{{ $patient->full_name }}</td>
+                                <td class="px-6 py-4 font-semibold text-slate-900"><x-patient-link :patient="$patient" /></td>
                                 <td class="px-6 py-4 text-slate-600">
                                     {{ $patient->DOB ? $patient->DOB->format('d/m/Y') : '-' }}
                                 </td>

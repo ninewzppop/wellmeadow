@@ -116,7 +116,7 @@
                                     <span class="text-xs">{{ optional($appt->ApptTime)->format('H:i') }}</span>
                                 </td>
                                 <td class="px-6 py-4 font-semibold text-slate-900">
-                                    {{ $appt->patient->full_name ?? '—' }}<br>
+                                    <x-patient-link :patient="$appt->patient" /><br>
                                     <span class="text-xs text-slate-400">{{ $appt->patient->Pt_No ?? '—' }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-slate-600">{{ $appt->consultant->full_name ?? '—' }}</td>

@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -20,17 +21,33 @@ class MedicationOrderController extends Controller
 {
     public function index(): View
     {
-        $orders = MedicationOrder::with(['patient', 'prescriber', 'items.drug'])
-            ->where('status', MedicationOrder::STATUS_PENDING)
-            ->orderBy('OrderedAt')
+        $query = MedicationOrder::with(['patient', 'prescriber', 'items.drug'])
+            ->where('status', MedicationOrder::STATUS_PENDING);
+
+        // Role scope: clinicians see their own prescriptions, ward roles their ward's patients.
+        $user = auth()->user();
+        if ($user->isClinician() && $user->stf_no !== null) {
+            $query->where('Stf_No', $user->stf_no);
+        } else {
+            $ids = $user->accessiblePatientIds();
+            if ($ids !== null) {
+                $query->whereIn('Pt_No', $ids);
+            }
+        }
+
+        $orders = $query->orderBy('OrderedAt')
             ->orderBy('Order_No')
             ->get();
 
         return view('medication-orders.index', compact('orders'));
     }
 
-    public function show(MedicationOrder $order): View
+    public function show(MedicationOrder $order): View|RedirectResponse
     {
+        if (Gate::denies('view', $order)) {
+            return redirect()->route('forbidden');
+        }
+
         $order->load(['items.drug', 'patient.allergies.drug', 'prescriber', 'appointment']);
 
         $conflicts = $this->conflictsFor(
@@ -47,6 +64,10 @@ class MedicationOrderController extends Controller
     public function store(Request $request, Room $room, Appointment $appointment): RedirectResponse
     {
         abort_unless($appointment->Room_No === $room->Room_No, 404);
+
+        if (Gate::denies('create', MedicationOrder::class)) {
+            return redirect()->route('forbidden');
+        }
 
         if ($appointment->status !== Appointment::STATUS_IN_CONSULTATION) {
             return $this->backToQueue($request, $room)->withErrors([
@@ -117,6 +138,10 @@ class MedicationOrderController extends Controller
 
     public function confirm(Request $request, MedicationOrder $order): RedirectResponse
     {
+        if (Gate::denies('dispense', $order)) {
+            return redirect()->route('forbidden');
+        }
+
         if ($order->status !== MedicationOrder::STATUS_PENDING) {
             return redirect()->route('medications.index')
                 ->withErrors(['queue' => __('This order is no longer pending.')]);
@@ -196,6 +221,10 @@ class MedicationOrderController extends Controller
 
     public function cancel(Request $request, MedicationOrder $order): RedirectResponse
     {
+        if (Gate::denies('dispense', $order)) {
+            return redirect()->route('forbidden');
+        }
+
         if ($order->status !== MedicationOrder::STATUS_PENDING) {
             return redirect()->route('medications.index')
                 ->withErrors(['queue' => __('This order is no longer pending.')]);

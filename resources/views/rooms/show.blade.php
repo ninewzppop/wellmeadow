@@ -91,7 +91,7 @@
                                 <td class="px-5 py-4">
                                     <div class="flex items-center gap-2">
                                         <span class="font-semibold text-slate-900">
-                                            {{ $appt->patient?->full_name ?? '—' }}
+                                            <x-patient-link :patient="$appt->patient" />
                                         </span>
                                         @if ($hasAllergy)
                                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
@@ -143,7 +143,7 @@
                                             <button type="button"
                                                     onclick="document.getElementById('admit-modal-{{ $appt->Appt_No }}').showModal()"
                                                     @disabled(! $appt->patient)
-                                                    title="{{ $appt->patient ? __('Admit to in-patient waiting list and complete the visit') : __('This appointment has no linked patient.') }}"
+                                                    title="{{ $appt->patient ? __('Admit directly to the first free bed and complete the visit') : __('This appointment has no linked patient.') }}"
                                                     class="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white enabled:hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-40">
                                                 {{ __('Admit as inpatient') }}
                                             </button>
@@ -188,7 +188,7 @@
                             <tr class="text-slate-500">
                                 <td class="px-5 py-3">{{ optional($appt->ApptTime)->format('H:i') ?? '—' }}</td>
                                 <td class="px-5 py-3">
-                                    {{ $appt->patient?->full_name ?? '—' }}
+                                    <x-patient-link :patient="$appt->patient" />
                                     <span class="text-xs text-slate-400">{{ $appt->patient?->Pt_No }}</span>
                                 </td>
                                 <td class="px-5 py-3">{{ $appt->consultant?->full_name ?? '—' }}</td>
@@ -229,7 +229,7 @@
                     <div>
                         <h3 class="text-base font-bold text-slate-900">{{ __('Order medication') }}</h3>
                         <p class="mt-0.5 text-xs text-slate-500">
-                            {{ $appt->patient?->full_name }} · {{ __('HN') }} {{ $appt->patient?->Pt_No }}
+                            <x-patient-link :patient="$appt->patient" /> · {{ __('HN') }} {{ $appt->patient?->Pt_No }}
                         </p>
                     </div>
                     <button type="submit" formmethod="dialog" formnovalidate
@@ -405,7 +405,7 @@
                     <div>
                         <h3 class="text-base font-bold text-slate-900">{{ __('Admit as inpatient') }}</h3>
                         <p class="mt-0.5 text-xs text-slate-500">
-                            {{ $appt->patient?->full_name }} · {{ __('HN') }} {{ $appt->patient?->Pt_No }}
+                            <x-patient-link :patient="$appt->patient" /> · {{ __('HN') }} {{ $appt->patient?->Pt_No }}
                         </p>
                     </div>
                     <button type="submit" formmethod="dialog" formnovalidate
@@ -414,7 +414,7 @@
                 </div>
 
                 <p class="mb-4 rounded-xl bg-violet-50 p-3 text-xs text-violet-800">
-                    {{ __('The patient will be added to the in-patient waiting list dated today (:date). A ward and bed are assigned later from the In-patients page.', ['date' => $date->format('d/m/Y')]) }}
+                    {{ __('The patient will be admitted immediately to the first ward with a free bed, and the first free bed in that ward (:date).', ['date' => $date->format('d/m/Y')]) }}
                 </p>
 
                 <div>
@@ -430,7 +430,7 @@
                     </button>
                     <button type="submit"
                             class="rounded-lg bg-violet-600 px-5 py-2 text-sm font-semibold text-white hover:bg-violet-700">
-                        {{ __('Add to waiting list & complete') }}
+                        {{ __('Admit to bed & complete') }}
                     </button>
                 </div>
             </form>

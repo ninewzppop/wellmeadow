@@ -8,14 +8,12 @@
         <h1 class="mb-1 text-2xl font-bold text-slate-900">
             {{ $isEdit ? __('Edit Requisition') . ' — ' . $requisition->Wd_Req_No : __('New Requisition') }}
         </h1>
+        @if ($isEdit)
         <p class="mb-6 text-sm text-slate-500">
-            @if ($isEdit)
                 {{ __('Requisition No.') }}: <span class="font-semibold text-slate-700">{{ $requisition->Wd_Req_No }}</span>
                 <span class="text-slate-400">({{ __('Cannot be changed after creation') }})</span>
-            @else
-                {{ __('Requisition number will be generated as WR1, WR2…') }}
-            @endif
         </p>
+        @endif
 
         <form method="POST" action="{{ $isEdit ? route('requisitions.update', $requisition) : route('requisitions.store') }}" id="req-form">
             @csrf

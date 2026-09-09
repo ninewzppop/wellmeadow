@@ -31,6 +31,20 @@ class LocalDr extends Model
         return trim($this->FirstName.' '.$this->LastName);
     }
 
+    /**
+     * Next auto-generated clinic number (LD01, LD02, …).
+     */
+    public static function nextNo(): string
+    {
+        $max = static::query()
+            ->where('Clinic_No', 'like', 'LD%')
+            ->pluck('Clinic_No')
+            ->map(fn (string $clinicNo) => (int) substr($clinicNo, 2))
+            ->max();
+
+        return 'LD'.str_pad((string) (($max ?? 0) + 1), 2, '0', STR_PAD_LEFT);
+    }
+
     public function patients(): HasMany
     {
         return $this->hasMany(Patient::class, 'Clinic_No', 'Clinic_No');

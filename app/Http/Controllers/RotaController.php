@@ -19,9 +19,21 @@ class RotaController extends Controller
         $weekBeginning = $request->validate(['date' => ['nullable', 'date']])['date'] ?? null;
         $editId = $request->validate(['edit' => ['nullable', 'string']])['edit'] ?? null;
 
+        // Role scope: directors see all; charge nurses their ward;
+        // everyone else sees only their own roster rows.
+        $user = $request->user();
+
         $rotas = StfRota::query()
             ->with(['stf.positions.pos', 'wd'])
             ->when($weekBeginning, fn ($query) => $query->whereDate('WkBegin', $weekBeginning))
+            ->when(
+                $user->hasRole('charge_nurse') && ! $user->managesAllWards(),
+                fn ($query) => $query->where('Wd_No', $user->wardNo()),
+            )
+            ->when(
+                $user->hasRole(['doctor', 'consultant', 'senior_nurse', 'staff_nurse', 'auxiliary']),
+                fn ($query) => $query->where('Stf_No', $user->stf_no),
+            )
             ->get()
             ->sortBy(fn (StfRota $rota) => (($rota->stf?->full_name ?? '~zz').'|'.($rota->WkBegin?->toDateString() ?? '')))
             ->values();
@@ -36,6 +48,10 @@ class RotaController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validated($request);
+
+        if (! $this->canManageRota($request, $data['Wd_No'])) {
+            return redirect()->route('forbidden');
+        }
 
         if ($this->hasConflict($data['Stf_No'], $data['WkBegin'])) {
             return back()
@@ -56,6 +72,11 @@ class RotaController extends Controller
     {
         $data = $this->validated($request);
 
+        if (! $this->canManageRota($request, $allocation->Wd_No)
+            || ! $this->canManageRota($request, $data['Wd_No'])) {
+            return redirect()->route('forbidden');
+        }
+
         if ($this->hasConflict($data['Stf_No'], $data['WkBegin'], $allocation->StfRota_No)) {
             return redirect()
                 ->route('rota.index', ['edit' => $allocation->StfRota_No])
@@ -71,14 +92,28 @@ class RotaController extends Controller
 
     public function destroy(StfRota $allocation): RedirectResponse
     {
+        if (! $this->canManageRota(request(), $allocation->Wd_No)) {
+            return redirect()->route('forbidden');
+        }
+
         $allocation->delete();
 
         return redirect()->route('rota.index')
             ->with('status', __('Allocation removed.'));
     }
 
-    private function validated(Request $request): array
+    /**
+     * Rota writes: medical directors anywhere, charge nurses in their own ward.
+     */
+    private function canManageRota(Request $request, ?string $wardNo): bool
     {
+        $user = $request->user();
+
+        return $user->isMedicalDirector()
+            || ($user->hasRole('charge_nurse') && ($user->managesAllWards() || $wardNo === $user->wardNo()));
+    }
+
+    private function validated(Request $request): array {
         return $request->validate([
             'Stf_No' => ['required', 'exists:Stf,Stf_No'],
             'Wd_No' => ['required', 'exists:Wd,Wd_No'],

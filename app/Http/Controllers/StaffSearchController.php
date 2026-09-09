@@ -24,6 +24,12 @@ class StaffSearchController extends Controller
 
         $query = Stf::with(['qualifications', 'workExperiences', 'positions.pos', 'assignedWard']);
 
+        // Doctors search within their own ward only.
+        $user = $request->user();
+        if ($user->isClinician() && ! $user->managesAllWards()) {
+            $query->where('Alloc_Wd_No', $user->wardNo());
+        }
+
         if (! empty($data['qualification'])) {
             $query->whereHas('qualifications', fn ($q) => $q->where('Type', 'like', '%'.$data['qualification'].'%'));
         }

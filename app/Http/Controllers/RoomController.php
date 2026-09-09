@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Appointment;
+use App\Models\Bed;
 use App\Models\InPatient;
 use App\Models\Patient;
 use App\Models\Pharmaceutical;
 use App\Models\Room;
+use App\Models\Wd;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -52,9 +54,13 @@ class RoomController extends Controller
     {
         $date = $this->resolveDate($request);
 
+        // Doctors see only their own appointments in the queue.
+        $doctorStfNo = $request->user()->isClinician() ? $request->user()->stf_no : null;
+
         $queue = Appointment::with(['patient.allergies.drug', 'patient.medications.drug', 'consultant'])
             ->where('Room_No', $room->Room_No)
             ->whereDate('ApptDate', $date->toDateString())
+            ->when($doctorStfNo !== null, fn ($q) => $q->where('Consult_Stf_No', $doctorStfNo))
             ->active()
             ->orderBy('ApptTime')
             ->orderBy('Appt_No')
@@ -63,6 +69,7 @@ class RoomController extends Controller
         $finished = Appointment::with(['patient.allergies.drug', 'consultant'])
             ->where('Room_No', $room->Room_No)
             ->whereDate('ApptDate', $date->toDateString())
+            ->when($doctorStfNo !== null, fn ($q) => $q->where('Consult_Stf_No', $doctorStfNo))
             ->completed()
             ->orderByDesc('ApptTime')
             ->orderByDesc('Appt_No')
@@ -81,6 +88,10 @@ class RoomController extends Controller
     public function start(Request $request, Room $room, Appointment $appointment): RedirectResponse
     {
         $this->assertSameRoom($room, $appointment);
+
+        if (! $this->canActOnQueue($request, $appointment)) {
+            return redirect()->route('forbidden');
+        }
 
         if (! in_array($appointment->status, [Appointment::STATUS_WAITING, Appointment::STATUS_SCHEDULED], true)) {
             return $this->backToQueue($request, $room)->withErrors([
@@ -112,6 +123,10 @@ class RoomController extends Controller
     {
         $this->assertSameRoom($room, $appointment);
 
+        if (! $this->canActOnQueue($request, $appointment)) {
+            return redirect()->route('forbidden');
+        }
+
         if (! $this->isInConsultation($appointment)) {
             return $this->backToQueue($request, $room)->withErrors([
                 'queue' => __('Only appointments currently in consultation can be completed.'),
@@ -128,30 +143,89 @@ class RoomController extends Controller
             'ExpStayDays' => ['required', 'integer', 'min:1'],
         ]);
 
-        DB::transaction(function () use ($appointment, $data) {
-            InPatient::create([
-                'In_Pt_No' => InPatient::nextNo(),
-                'Pt_No' => $appointment->Pt_No,
-                'Bed_No' => null,
-                'DateWaitList' => Carbon::today()->toDateString(),
-                'ExpStayDays' => $data['ExpStayDays'],
-                'DatePlaced' => null,
-                'DateLeave' => null,
-                'ActDateLeft' => null,
-            ]);
+        $today = Carbon::today()->toDateString();
 
-            $appointment->update(['status' => Appointment::STATUS_COMPLETED_WAITLIST]);
-        });
+        try {
+            $assigned = DB::transaction(function () use ($appointment, $data, $today) {
+                $bed = $this->firstAvailableBed();
+
+                if (! $bed) {
+                    return null;
+                }
+
+                $inPatient = InPatient::create([
+                    'In_Pt_No' => InPatient::nextNo(),
+                    'Pt_No' => $appointment->Pt_No,
+                    'Bed_No' => $bed->Bed_No,
+                    'DateWaitList' => $today,
+                    'ExpStayDays' => $data['ExpStayDays'],
+                    'DatePlaced' => $today,
+                    'DateLeave' => null,
+                    'ActDateLeft' => null,
+                ]);
+
+                Bed::where('Bed_No', $bed->Bed_No)->update(['BedStatus' => 'Occupied']);
+
+                $appointment->update(['status' => Appointment::STATUS_COMPLETED_WAITLIST]);
+
+                return ['inPatient' => $inPatient, 'bed' => $bed];
+            });
+        } catch (\Throwable $e) {
+            report($e);
+
+            return $this->backToQueue($request, $room)->withErrors([
+                'queue' => __('Could not assign a bed. Please try again.'),
+            ]);
+        }
+
+        if (! $assigned) {
+            return $this->backToQueue($request, $room)->withErrors([
+                'queue' => __('No available beds. The patient could not be admitted.'),
+            ]);
+        }
 
         return $this->backToQueue($request, $room)->with(
             'status',
-            __(':name added to the in-patient waiting list. Visit completed.', ['name' => $appointment->patient?->full_name ?? $appointment->Appt_No]),
+            __(':name admitted to :ward / bed :bed. Visit completed.', [
+                'name' => $appointment->patient?->full_name ?? $appointment->Appt_No,
+                'ward' => $assigned['bed']->Wd_No,
+                'bed' => $assigned['bed']->Bed_No,
+            ]),
         );
+    }
+
+    /**
+     * First ward (by numeric Wd_No) that still has a free bed,
+     * and the first free bed (by Bed_No) inside that ward.
+     */
+    private function firstAvailableBed(): ?Bed
+    {
+        $wards = Wd::orderBy('Wd_No')->get()
+            ->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))
+            ->values();
+
+        foreach ($wards as $ward) {
+            $bed = Bed::where('Wd_No', $ward->Wd_No)
+                ->where('BedStatus', 'Available')
+                ->orderBy('Bed_No')
+                ->lockForUpdate()
+                ->first();
+
+            if ($bed) {
+                return $bed;
+            }
+        }
+
+        return null;
     }
 
     public function complete(Request $request, Room $room, Appointment $appointment): RedirectResponse
     {
         $this->assertSameRoom($room, $appointment);
+
+        if (! $this->canActOnQueue($request, $appointment)) {
+            return redirect()->route('forbidden');
+        }
 
         if (! $this->isInConsultation($appointment)) {
             return $this->backToQueue($request, $room)->withErrors([
@@ -170,6 +244,23 @@ class RoomController extends Controller
     private function isInConsultation(Appointment $appointment): bool
     {
         return $appointment->status === Appointment::STATUS_IN_CONSULTATION;
+    }
+
+    /**
+     * Queue actions (start/admit/complete): directors and charge nurses act on
+     * any visit; doctors/consultants act only on their own appointments.
+     */
+    private function canActOnQueue(Request $request, Appointment $appointment): bool
+    {
+        $user = $request->user();
+
+        if ($user->hasRole(['medical_director', 'charge_nurse'])) {
+            return true;
+        }
+
+        return $user->isClinician()
+            && $user->stf_no !== null
+            && $appointment->Consult_Stf_No === $user->stf_no;
     }
 
     private function assertSameRoom(Room $room, Appointment $appointment): void

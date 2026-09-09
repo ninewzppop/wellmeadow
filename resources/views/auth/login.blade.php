@@ -18,12 +18,6 @@
             <form method="POST" action="{{ route('login.submit') }}" class="rounded-lg bg-white p-6 shadow">
                 @csrf
 
-                @error('g-recaptcha-response')
-                    <div class="mb-4 rounded border border-[#9E2A2B]/30 bg-[#9E2A2B]/5 px-4 py-3 text-sm text-[#9E2A2B]">
-                        {{ $message }}
-                    </div>
-                @enderror
-
                 @error('email')
                     <div class="mb-4 rounded border border-[#9E2A2B]/30 bg-[#9E2A2B]/5 px-4 py-3 text-sm text-[#9E2A2B]">
                         {{ $message }}
@@ -56,9 +50,6 @@
                 </div>
 
                 <div class="mt-6">
-                    <div class="mb-4 flex justify-center">
-                        <div class="g-recaptcha" data-sitekey="{{ config('recaptcha.site_key') }}" data-theme="light"></div>
-                    </div>
                     <button type="submit"
                             class="w-full rounded bg-[#112D6E] px-6 py-2 text-sm font-medium text-white hover:bg-[#0D2355]">
                         {{ __('Sign in') }}
@@ -67,16 +58,21 @@
             </form>
 
             <div class="mt-4 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4">
-                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">For test this website</p>
+                <p class="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">For test this website (password: password)</p>
                 <div class="space-y-1 text-sm text-slate-600">
-                    <p><span class="font-medium text-slate-700">Email:</span> test@example.com</p>
-                    <p><span class="font-medium text-slate-700">Password:</span> password</p>
+                    <p><span class="font-medium text-slate-700">Director —</span> director@example.com</p>
+                    <p><span class="font-medium text-slate-700">Personnel —</span> personnel@example.com</p>
+                    <p><span class="font-medium text-slate-700">Charge —</span> charge@example.com</p>
+                    <p><span class="font-medium text-slate-700">Doctor —</span> doctor@example.com</p>
+                    <p><span class="font-medium text-slate-700">Consultant —</span> consultant@example.com</p>
+                    <p><span class="font-medium text-slate-700">Senior —</span> senior@example.com</p>
+                    <p><span class="font-medium text-slate-700">Nurse —</span> nurse@example.com</p>
+                    <p><span class="font-medium text-slate-700">Aux —</span> aux@example.com</p>
+                    <p><span class="font-medium text-slate-700">Physio —</span> physio@example.com</p>
+                    <p><span class="font-medium text-slate-700">Admin —</span> admin@example.com</p>
+                    <p><span class="font-medium text-slate-700">Staff —</span> test@example.com</p>
                 </div>
             </div>
         </div>
     </div>
 @endsection
-
-@push('scripts')
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-@endpush

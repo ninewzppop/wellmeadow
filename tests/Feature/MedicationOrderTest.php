@@ -21,7 +21,7 @@ class MedicationOrderTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->actingAs(User::create(['name' => 'Test', 'email' => 'test@example.com', 'password' => 'x']));
+        $this->actingAs(User::create(['name' => 'Test', 'email' => 'test@example.com', 'password' => 'x', 'role' => 'medical_director']));
     }
 
     private function fixtures(): array

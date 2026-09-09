@@ -9,7 +9,9 @@ use App\Models\Patient;
 use App\Models\Pharmaceutical;
 use App\Models\Room;
 use App\Models\Wd;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class ReportController extends Controller
@@ -18,6 +20,11 @@ class ReportController extends Controller
     {
         $query = Patient::with(['localDoctor', 'allergies'])
             ->orderByRaw('LENGTH(Pt_No) DESC')->orderBy('Pt_No', 'desc');
+
+        $ids = $request->user()->accessiblePatientIds();
+        if ($ids !== null) {
+            $query->whereIn('Pt_No', $ids);
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -37,8 +44,12 @@ class ReportController extends Controller
         return view('reports.patients', compact('patients'));
     }
 
-    public function patient(Patient $patient): View
+    public function patient(Patient $patient): View|RedirectResponse
     {
+        if (Gate::denies('view', $patient)) {
+            return redirect()->route('forbidden');
+        }
+
         $patient->load([
             'localDoctor',
             'appointments.consultant',
@@ -63,9 +74,12 @@ class ReportController extends Controller
             $reportDate = \Carbon\Carbon::today();
         }
 
+        $doctorStfNo = $request->user()->isClinician() ? $request->user()->stf_no : null;
+
         $queue = Appointment::with(['patient.allergies.drug', 'patient.medications.drug', 'consultant'])
             ->where('Room_No', $room->Room_No)
             ->whereDate('ApptDate', $reportDate->toDateString())
+            ->when($doctorStfNo !== null, fn ($q) => $q->where('Consult_Stf_No', $doctorStfNo))
             ->orderBy('ApptTime')->orderBy('Appt_No')
             ->get();
 
@@ -73,6 +87,7 @@ class ReportController extends Controller
             ->where('Room_No', $room->Room_No)
             ->whereDate('ApptDate', $reportDate->toDateString())
             ->whereIn('status', Appointment::COMPLETED_STATUSES)
+            ->when($doctorStfNo !== null, fn ($q) => $q->where('Consult_Stf_No', $doctorStfNo))
             ->orderByDesc('ApptTime')
             ->get();
 
@@ -136,8 +151,12 @@ class ReportController extends Controller
         return view('reports.pharmacy', compact('items', 'summary'));
     }
 
-    public function ward(Wd $ward): View
+    public function ward(Wd $ward): View|RedirectResponse
     {
+        if (! $this->wardReportInScope($ward->Wd_No)) {
+            return redirect()->route('forbidden');
+        }
+
         $beds = Bed::where('Wd_No', $ward->Wd_No)->orderBy('Bed_No')->get();
         $available = $beds->where('BedStatus', 'Available')->count();
         $occupied = $beds->where('BedStatus', 'Occupied')->count();
@@ -155,7 +174,14 @@ class ReportController extends Controller
 
     public function wards(): View
     {
-        $wards = Wd::orderBy('Wd_No')->get();
+        $query = Wd::orderBy('Wd_No');
+
+        $user = auth()->user();
+        if ($this->wardBound($user) && ! $user->managesAllWards() && $user->wardNo() !== null) {
+            $query->where('Wd_No', $user->wardNo());
+        }
+
+        $wards = $query->get();
         $bedStats = Bed::query()
             ->selectRaw('Wd_No, SUM(BedStatus = "Occupied") AS occupied_beds, SUM(BedStatus = "Available") AS available_beds')
             ->groupBy('Wd_No')
@@ -163,5 +189,22 @@ class ReportController extends Controller
             ->keyBy('Wd_No');
 
         return view('reports.wards', compact('wards', 'bedStats'));
+    }
+
+    /**
+     * Roles tied to a ward see only their own ward in ward reports.
+     */
+    private function wardBound($user): bool
+    {
+        return $user->hasRole(['charge_nurse', 'doctor', 'consultant', 'senior_nurse', 'staff_nurse', 'auxiliary']);
+    }
+
+    private function wardReportInScope(string $wardNo): bool
+    {
+        $user = auth()->user();
+
+        return ! $this->wardBound($user)
+            || $user->managesAllWards()
+            || $wardNo === $user->wardNo();
     }
 }

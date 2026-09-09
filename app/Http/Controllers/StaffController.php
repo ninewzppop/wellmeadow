@@ -10,6 +10,7 @@ use App\Models\StfWorkExp;
 use App\Models\Wd;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -17,10 +18,18 @@ class StaffController extends Controller
 {
     public function index(): View
     {
-        $staff = Stf::with(['positions.pos', 'qualifications', 'workExperiences', 'assignedWard'])
+        $query = Stf::with(['positions.pos', 'qualifications', 'workExperiences', 'assignedWard'])
             ->orderBy('LastName')
-            ->orderBy('FirstName')
-            ->paginate(15);
+            ->orderBy('FirstName');
+
+        // Doctors see staff allocated to their own ward only
+        // (directors and personnel officers see all staff).
+        $user = auth()->user();
+        if ($user->isClinician() && ! $user->managesAllWards()) {
+            $query->where('Alloc_Wd_No', $user->wardNo());
+        }
+
+        $staff = $query->paginate(15);
 
         return view('staff.index', compact('staff'));
     }
@@ -36,6 +45,7 @@ class StaffController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateStaff($request);
+        $data['Stf_No'] = Stf::nextNo();
 
         $staff = Stf::create($data);
 
@@ -45,8 +55,12 @@ class StaffController extends Controller
             ->with('status', __('Created record for :name.', ['name' => $staff->full_name]));
     }
 
-    public function edit(Stf $staff): View
+    public function edit(Stf $staff): View|RedirectResponse
     {
+        if (Gate::denies('update', $staff)) {
+            return redirect()->route('forbidden');
+        }
+
         $staff->load(['qualifications', 'workExperiences', 'positions.pos', 'assignedWard']);
 
         $positions = Pos::orderBy('Pos_Name')->get();
@@ -57,6 +71,10 @@ class StaffController extends Controller
 
     public function update(Request $request, Stf $staff): RedirectResponse
     {
+        if (Gate::denies('update', $staff)) {
+            return redirect()->route('forbidden');
+        }
+
         $data = $this->validateStaff($request);
 
         $staff->update($data);
@@ -69,6 +87,10 @@ class StaffController extends Controller
 
     public function destroy(Stf $staff): RedirectResponse
     {
+        if (Gate::denies('delete', $staff)) {
+            return redirect()->route('forbidden');
+        }
+
         $name = $staff->full_name;
 
         $staff->qualifications()->delete();
@@ -84,7 +106,6 @@ class StaffController extends Controller
     protected function validateStaff(Request $request): array
     {
         return $request->validate([
-            'Stf_No' => ['required', 'string', 'max:10'],
             'FirstName' => ['required', 'string', 'max:50'],
             'LastName' => ['required', 'string', 'max:50'],
             'Address' => ['nullable', 'string', 'max:150'],

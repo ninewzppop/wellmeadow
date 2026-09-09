@@ -36,8 +36,12 @@ abstract class InventoryController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
+        if (! auth()->user()->isMedicalDirector()) {
+            return redirect()->route('forbidden');
+        }
+
         return view($this->viewPrefix().'.form', [
             'item' => new ($this->itemClass()),
             'suppliers' => Supplier::orderBy('Name')->get(),
@@ -46,6 +50,10 @@ abstract class InventoryController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if (! $request->user()->isMedicalDirector()) {
+            return redirect()->route('forbidden');
+        }
+
         $data = $this->validateItem($request);
         $code = $this->nextCode();
         $data[$this->codeColumn()] = $code;
@@ -60,8 +68,12 @@ abstract class InventoryController extends Controller
             ->with('status', __('Created :name.', ['name' => $item->Name]));
     }
 
-    public function edit(string $code): View
+    public function edit(string $code): View|RedirectResponse
     {
+        if (! auth()->user()->isMedicalDirector()) {
+            return redirect()->route('forbidden');
+        }
+
         return view($this->viewPrefix().'.form', [
             'item' => $this->findItem($code),
             'suppliers' => Supplier::orderBy('Name')->get(),
@@ -70,6 +82,10 @@ abstract class InventoryController extends Controller
 
     public function update(Request $request, string $code): RedirectResponse
     {
+        if (! $request->user()->isMedicalDirector()) {
+            return redirect()->route('forbidden');
+        }
+
         $item = $this->findItem($code);
         $item->update($this->validateItem($request, $item));
 
@@ -79,6 +95,10 @@ abstract class InventoryController extends Controller
 
     public function destroy(string $code): RedirectResponse
     {
+        if (! auth()->user()->isMedicalDirector()) {
+            return redirect()->route('forbidden');
+        }
+
         $item = $this->findItem($code);
 
         try {
@@ -112,6 +132,10 @@ abstract class InventoryController extends Controller
 
     public function restock(Request $request, string $code): RedirectResponse
     {
+        if (! $request->user()->isMedicalDirector()) {
+            return redirect()->route('forbidden');
+        }
+
         $validated = $request->validate([
             'quantity' => ['required', 'integer', 'min:1'],
             'note' => ['nullable', 'string', 'max:255'],
@@ -129,6 +153,10 @@ abstract class InventoryController extends Controller
 
     public function adjust(Request $request, string $code): RedirectResponse
     {
+        if (! $request->user()->isMedicalDirector()) {
+            return redirect()->route('forbidden');
+        }
+
         $validated = $request->validate([
             'quantity' => ['required', 'integer', 'min:1'],
             'note' => ['required', 'string', 'max:255'],

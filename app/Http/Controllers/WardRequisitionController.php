@@ -13,6 +13,7 @@ use App\Models\Wd;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -25,7 +26,10 @@ class WardRequisitionController extends Controller
             ->orderBy('DateOrd')
             ->orderBy('Wd_Req_No');
 
-        if ($request->filled('ward')) {
+        // Ward roles are locked to their own ward (overrides ?ward=).
+        if (! $request->user()->managesAllWards()) {
+            $query->where('Wd_No', $request->user()->wardNo());
+        } elseif ($request->filled('ward')) {
             $query->where('Wd_No', $request->ward);
         }
         if ($request->filled('status') && in_array($request->status, [Wardrequisition::STATUS_PENDING, Wardrequisition::STATUS_APPROVED], true)) {
@@ -45,7 +49,9 @@ class WardRequisitionController extends Controller
             ->orderByDesc('DateRecv')
             ->orderByDesc('DateOrd');
 
-        if ($request->filled('ward')) {
+        if (! $request->user()->managesAllWards()) {
+            $query->where('Wd_No', $request->user()->wardNo());
+        } elseif ($request->filled('ward')) {
             $query->where('Wd_No', $request->ward);
         }
 
@@ -65,7 +71,10 @@ class WardRequisitionController extends Controller
         $query = Wardrequisition::with(['ward', 'itemRequests.item', 'drugRequests.drug'])
             ->where('status', Wardrequisition::STATUS_COMPLETED);
 
-        if ($selectedWard) {
+        if (! $request->user()->managesAllWards()) {
+            $query->where('Wd_No', $request->user()->wardNo());
+            $selectedWard = $request->user()->wardNo();
+        } elseif ($selectedWard) {
             $query->where('Wd_No', $selectedWard);
         }
         if ($dateFrom) {
@@ -98,7 +107,16 @@ class WardRequisitionController extends Controller
 
     public function store(Request $request): RedirectResponse
     {
+        if (Gate::denies('create', Wardrequisition::class)) {
+            return redirect()->route('forbidden');
+        }
+
         $data = $this->validateRequisition($request);
+
+        // Ward roles requisition for their own ward only.
+        if (! $request->user()->managesAllWards() && $data['Wd_No'] !== $request->user()->wardNo()) {
+            return redirect()->route('forbidden');
+        }
 
         $items = $this->filterItems($request->input('items', []));
 
@@ -132,8 +150,12 @@ class WardRequisitionController extends Controller
             ->with('status', __('Created requisition :no.', ['no' => $wdReqNo]));
     }
 
-    public function show(Wardrequisition $requisition): View
+    public function show(Wardrequisition $requisition): View|RedirectResponse
     {
+        if (Gate::denies('view', $requisition)) {
+            return redirect()->route('forbidden');
+        }
+
         $requisition->load(['ward', 'requester', 'receiver', 'itemRequests.item.supplier', 'drugRequests.drug.supplier']);
 
         $totalCost = 0;
@@ -147,9 +169,13 @@ class WardRequisitionController extends Controller
         return view('requisitions.show', compact('requisition', 'totalCost'));
     }
 
-    public function edit(Wardrequisition $requisition): View
+    public function edit(Wardrequisition $requisition): View|RedirectResponse
     {
         abort_unless($requisition->status === Wardrequisition::STATUS_PENDING, 403, __('Only pending requisitions can be edited.'));
+
+        if (Gate::denies('update', $requisition)) {
+            return redirect()->route('forbidden');
+        }
 
         $requisition->load(['itemRequests', 'drugRequests']);
 
@@ -166,6 +192,10 @@ class WardRequisitionController extends Controller
     public function update(Request $request, Wardrequisition $requisition): RedirectResponse
     {
         abort_unless($requisition->status === Wardrequisition::STATUS_PENDING, 403);
+
+        if (Gate::denies('update', $requisition)) {
+            return redirect()->route('forbidden');
+        }
 
         $data = $this->validateRequisition($request);
         $items = $this->filterItems($request->input('items', []));
@@ -200,6 +230,10 @@ class WardRequisitionController extends Controller
     public function approve(Request $request, Wardrequisition $requisition): RedirectResponse
     {
         abort_unless($requisition->status === Wardrequisition::STATUS_PENDING, 400);
+
+        if (Gate::denies('approve', $requisition)) {
+            return redirect()->route('forbidden');
+        }
 
         $requisition->load(['itemRequests.item', 'drugRequests.drug']);
 
@@ -272,6 +306,10 @@ class WardRequisitionController extends Controller
     {
         abort_unless($requisition->status === Wardrequisition::STATUS_APPROVED, 400);
 
+        if (Gate::denies('receive', $requisition)) {
+            return redirect()->route('forbidden');
+        }
+
         $data = $request->validate([
             'Received_By' => ['required', 'exists:Stf,Stf_No'],
             'DateRecv' => ['required', 'date'],
@@ -290,6 +328,10 @@ class WardRequisitionController extends Controller
     public function destroy(Wardrequisition $requisition): RedirectResponse
     {
         abort_unless($requisition->status === Wardrequisition::STATUS_PENDING, 403);
+
+        if (Gate::denies('delete', $requisition)) {
+            return redirect()->route('forbidden');
+        }
 
         $no = $requisition->Wd_Req_No;
         DB::transaction(function () use ($requisition) {

@@ -26,12 +26,13 @@
         <section class="rounded-lg bg-white p-6 shadow">
             <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">{{ __('Personal details') }}</h2>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                @if ($editing)
                 <div>
-                    <label for="Stf_No" class="block text-sm font-medium text-slate-700">{{ __('Staff No *') }}</label>
-                    <input type="text" id="Stf_No" name="Stf_No" value="{{ old('Stf_No', $staff->Stf_No) }}"
-                           {{ $editing ? 'readonly' : '' }}
-                           class="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none {{ $editing ? 'bg-slate-100' : '' }}">
+                    <label class="block text-sm font-medium text-slate-700">{{ __('Staff No *') }}</label>
+                    <input type="text" value="{{ $staff->Stf_No }}" disabled
+                           class="mt-1 w-full rounded border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
                 </div>
+                @endif
                 <div>
                     <label for="NIN" class="block text-sm font-medium text-slate-700">{{ __('National Insurance No') }}</label>
                     <input type="text" id="NIN" name="NIN" value="{{ old('NIN', $staff->NIN) }}"
@@ -107,6 +108,8 @@
                                 @endforeach
                             </select>
                         </div>
+                        {{-- Compensation group hidden from doctors/consultants (ADR-12.6) --}}
+                        @if (auth()->user()->canViewSalary())
                         <div>
                             <label class="block text-xs font-medium text-slate-500">{{ __('Salary') }}</label>
                             <input type="number" step="0.01" name="positions[{{ $loop->index }}][CurrSalary]" value="{{ $sp->CurrSalary }}"
@@ -122,12 +125,15 @@
                             <input type="text" name="positions[{{ $loop->index }}][ContractType]" value="{{ $sp->ContractType }}"
                                    class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm">
                         </div>
+                        @endif
                         <div class="flex items-end gap-2">
+                            @if (auth()->user()->canViewSalary())
                             <div class="flex-1">
                                 <label class="block text-xs font-medium text-slate-500">{{ __('Payment type') }}</label>
                                 <input type="text" name="positions[{{ $loop->index }}][PaymentType]" value="{{ $sp->PaymentType }}"
                                        class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm">
                             </div>
+                            @endif
                             <button type="button" onclick="this.closest('.grid').remove()"
                                     class="rounded bg-red-50 px-2 py-1.5 text-xs text-red-600 hover:bg-red-100">&times;</button>
                         </div>
@@ -233,6 +239,7 @@
                     @endforeach
                 </select>
             </div>
+            @if (auth()->user()->canViewSalary())
             <div>
                 <label class="block text-xs font-medium text-slate-500">{{ __('Salary') }}</label>
                 <input type="number" step="0.01" name="positions[__IDX__][CurrSalary]" class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm">
@@ -245,11 +252,14 @@
                 <label class="block text-xs font-medium text-slate-500">{{ __('Contract type') }}</label>
                 <input type="text" name="positions[__IDX__][ContractType]" class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm">
             </div>
+            @endif
             <div class="flex items-end gap-2">
+                @if (auth()->user()->canViewSalary())
                 <div class="flex-1">
                     <label class="block text-xs font-medium text-slate-500">{{ __('Payment type') }}</label>
                     <input type="text" name="positions[__IDX__][PaymentType]" class="mt-1 w-full rounded border border-slate-300 px-2 py-1.5 text-sm">
                 </div>
+                @endif
                 <button type="button" onclick="this.closest('.grid').remove()"
                         class="rounded bg-red-50 px-2 py-1.5 text-xs text-red-600 hover:bg-red-100">&times;</button>
             </div>

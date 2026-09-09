@@ -242,6 +242,9 @@
     "Save & complete visit": "บันทึกและจบการตรวจ",
     "Expected duration of stay (days)": "ระยะเวลาพักรักษาที่คาด (วัน)",
     "The patient will be added to the in-patient waiting list dated today (:date). A ward and bed are assigned later from the In-patients page.": "ผู้ป่วยจะถูกเพิ่มเข้า waiting list ผู้ป่วยใน วันที่ :date โดยจะจัด ward และเตียงภายหลังในหน้าผู้ป่วยใน",
+    "The patient will be admitted immediately to the first ward with a free bed, and the first free bed in that ward (:date).": "ผู้ป่วยจะถูก Admit เข้าเตียงทันที โดยเข้าวอร์ดแรกที่ว่าง และเตียงแรกที่ว่างของวอร์ดนั้น วันที่ :date",
+    "Admit directly to the first free bed and complete the visit": "Admit เข้าเตียงว่างเตียงแรกทันทีและจบการตรวจ",
+    "Admit to bed & complete": "Admit เข้าเตียง & จบการตรวจ",
     "Add to waiting list & complete": "ลง waiting list และจบการตรวจ",
 
     "Waiting for consultation": "รอตรวจ",
@@ -257,6 +260,9 @@
     "Order medication": "สั่งยา",
     "Medication dispensed for :name. Visit completed.": "จ่ายยาให้ :name เรียบร้อย และจบการตรวจแล้ว",
     ":name added to the in-patient waiting list. Visit completed.": "เพิ่ม :name เข้า waiting list ผู้ป่วยในเรียบร้อย และจบการตรวจแล้ว",
+    ":name admitted to :ward / bed :bed. Visit completed.": "รับ :name เข้าวอร์ด :ward / เตียง :bed เรียบร้อย และจบการตรวจแล้ว",
+    "No available beds. The patient could not be admitted.": "ไม่มีเตียงว่าง ไม่สามารถ Admit ผู้ป่วยได้",
+    "Could not assign a bed. Please try again.": "จัดเตียงไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
     "Visit completed for :name.": "จบการตรวจ :name เรียบร้อย",
 
     "Appointment No.": "เลขที่นัดหมาย",

@@ -21,6 +21,7 @@ class AppointmentTest extends TestCase
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password123',
+            'role' => 'medical_director',
         ]));
     }
 
@@ -83,7 +84,7 @@ class AppointmentTest extends TestCase
         $this->assertDatabaseHas('Appointment', ['Appt_No' => 'A13']);
     }
 
-    public function test_create_page_previews_next_appointment_no(): void
+    public function test_create_page_hides_auto_generated_appointment_no(): void
     {
         $this->createFixtures();
         Appointment::create($this->validPayload(['Appt_No' => 'A4']));
@@ -91,6 +92,8 @@ class AppointmentTest extends TestCase
         $response = $this->get('/appointments/create');
 
         $response->assertOk();
-        $response->assertSee('value="A5"', false);
+        $response->assertDontSee('value="A5"', false);
+        $response->assertDontSee(__('Appointment No.'));
+        $response->assertDontSee(__('Auto-generated'));
     }
 }

@@ -74,7 +74,7 @@
                 <dl class="space-y-2">
                     <div>
                         <dt class="text-xs text-slate-500">{{ __('Name') }}</dt>
-                        <dd class="mt-0.5 font-semibold text-slate-900">{{ $appointment->patient->full_name ?? '—' }}</dd>
+                        <dd class="mt-0.5 font-semibold text-slate-900"><x-patient-link :patient="$appointment->patient" /></dd>
                     </div>
                     <div>
                         <dt class="text-xs text-slate-500">{{ __('Patient No.') }}</dt>
@@ -209,7 +209,7 @@
                             @endphp
                             <div class="rounded-lg bg-slate-50 p-3">
                                 <div class="text-sm font-medium text-slate-800">
-                                    {{ $appt->ApptTime->format('H:i') }} &middot; {{ $appt->patient->full_name ?? '—' }}
+                                    {{ $appt->ApptTime->format('H:i') }} &middot; <x-patient-link :patient="$appt->patient" />
                                 </div>
                                 <div class="mt-0.5 text-xs text-slate-500">
                                     Room: {{ $appt->room->RoomName ?? '—' }}

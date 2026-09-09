@@ -6,7 +6,7 @@
 @section('report_reference', __('HN') . ' ' . $patient->Pt_No . ' | ' . $patient->DOB?->format('d/m/Y'))
 
 @section('content')
-<h2 style="margin:0 0 12px;font-size:14pt;color:#0f172a;">{{ $patient->full_name }} <span style="font-weight:400;color:#64748b;font-size:10pt;">{{ $patient->Pt_No }}</span></h2>
+<h2 style="margin:0 0 12px;font-size:14pt;color:#0f172a;"><x-patient-link :patient="$patient" /> <span style="font-weight:400;color:#64748b;font-size:10pt;">{{ $patient->Pt_No }}</span></h2>
 
 <table style="margin-bottom:14px;">
     <tr><th style="width:28%;">{{ __('DOB') }}</th><td>{{ $patient->DOB?->format('d/m/Y') ?? '-' }}</td><th>{{ __('Sex') }}</th><td>{{ $patient->Sex ?? '-' }}</td></tr>

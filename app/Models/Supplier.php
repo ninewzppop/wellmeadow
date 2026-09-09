@@ -24,4 +24,18 @@ class Supplier extends Model
     protected $fillable = [
         'Suppl_No', 'Name', 'Address', 'TelNo', 'FaxNo',
     ];
+
+    /**
+     * Next auto-generated supplier number (SUP01, SUP02, …).
+     */
+    public static function nextNo(): string
+    {
+        $max = static::query()
+            ->where('Suppl_No', 'like', 'SUP%')
+            ->pluck('Suppl_No')
+            ->map(fn (string $supplNo) => (int) substr($supplNo, 3))
+            ->max();
+
+        return 'SUP'.str_pad((string) (($max ?? 0) + 1), 2, '0', STR_PAD_LEFT);
+    }
 }

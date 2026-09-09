@@ -28,19 +28,14 @@
             <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
                 {{-- Main patient details --}}
                 <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:col-span-2">
+                    @if ($patient->exists)
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Patient No.') }}</label>
-                        @if ($patient->exists)
-                            <input type="text" value="{{ $patient->Pt_No }}" disabled
-                                   class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
-                            <p class="mt-1 text-xs text-slate-400">{{ __('Cannot be changed after creation') }}</p>
-                        @else
-                            <input type="text" value="" disabled
-                                   placeholder="{{ __('Auto-generated after save') }}"
-                                   class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
-                            <p class="mt-1 text-xs text-slate-400">{{ __('Will be generated automatically when saved') }}</p>
-                        @endif
+                        <input type="text" value="{{ $patient->Pt_No }}" disabled
+                               class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
+                        <p class="mt-1 text-xs text-slate-400">{{ __('Cannot be changed after creation') }}</p>
                     </div>
+                    @endif
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Date Registered') }}</label>

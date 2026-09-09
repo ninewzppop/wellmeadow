@@ -24,7 +24,12 @@
 | Wardrequisitions | A ward's stock/drug order header. |
 | Itemrequest / Drugrequest | Order lines; composite PK on (requisition, item/drug). |
 | PatientAllergy | A patient's recorded allergy to a drug. |
-| User | A system account in the existing `users` table (`id`, `name`, `email`, `password`, remember token, timestamps). Same model/table Laravel ships; no schema changes. |
+| User | A system account in the existing `users` table (`id`, `name`, `email`, `password`, remember token, timestamps) **plus `stf_no` (nullable FK → `Stf`) and `role` (ADR-0012)**. Same model/table Laravel ships; one additive migration only. |
+| Role | Value object on `users.role` (no table): one of `medical_director, personnel_officer, charge_nurse, doctor, consultant, senior_nurse, staff_nurse, auxiliary`. Old `admin` value retired (= `medical_director`). Seeded from the staff member's `Pos` (P001→medical_director, P002→personnel_officer, P003→charge_nurse, P004→senior_nurse, P005/P009→staff_nurse, P006→doctor, P007→auxiliary, P008→consultant). |
+| WardScope | The ward filter derived per request: own ward (`staff.Alloc_Wd_No`), or all wards for `medical_director` and for staff with `Alloc_Wd_No = NULL`. |
+| CareRelationship | The doctor→patient link: distinct `Pt_No` from `Appointment` where `Consult_Stf_No` = the doctor's `Stf_No` (any date). Defines which patients a doctor/consultant may see. |
+| CompensationBlock | `CurrSalary, HrsPerWk, ContractType, PaymentType` — never rendered for `doctor`/`consultant`. |
+| 403 page | `errors/403` view shown (via redirect to `forbidden`) when a role middleware/policy denies access; back button target chosen per role. |
 | Login | Session-based authentication using Laravel's `web` guard. `Auth::attempt(email + password)` checks the existing `users` table; a logged-in session is created on success. |
 | Logout | `Auth::logout()` + session regeneration + redirect to `/login`. |
 | Guest | State where no authenticated `User` session exists; visiting `/login` while already logged in redirects to `staff.index`. |

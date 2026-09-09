@@ -187,7 +187,7 @@
                             @foreach ($todayAppointments->take(5) as $appointment)
                                 <tr class="border-b border-slate-100">
                                     <td class="py-2 pr-3">{{ $appointment->ApptTime?->format('H:i') ?? '—' }}</td>
-                                    <td class="py-2 pr-3">{{ $appointment->patient?->full_name ?? $appointment->Pt_No }}</td>
+                                    <td class="py-2 pr-3">@if ($appointment->patient)<x-patient-link :patient="$appointment->patient" />@else{{ $appointment->Pt_No }}@endif</td>
                                     <td class="py-2 pr-3">{{ $appointment->consultant?->full_name ?? '—' }}</td>
                                     <td class="py-2 pr-3">{{ $appointment->room?->RoomName ?? $appointment->Room_No ?? '—' }}</td>
                                     <td class="py-2">

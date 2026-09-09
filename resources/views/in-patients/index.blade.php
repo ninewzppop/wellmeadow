@@ -117,7 +117,7 @@
                             <tr class="hover:bg-slate-50">
                                 <td class="px-6 py-4 font-medium text-slate-700">{{ $ip->In_Pt_No }}</td>
                                 <td class="px-6 py-4 font-semibold text-slate-900">
-                                    {{ $ip->patient->full_name ?? '—' }}<br>
+                                    <x-patient-link :patient="$ip->patient" /><br>
                                     <span class="text-xs text-slate-400">{{ $ip->patient->Pt_No ?? '—' }}</span>
                                 </td>
                                 <td class="px-6 py-4 text-slate-600">

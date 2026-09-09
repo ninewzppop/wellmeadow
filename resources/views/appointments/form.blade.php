@@ -28,18 +28,19 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
                 {{-- Main appointment details --}}
-                <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:col-span-2">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-2">
+                    @if ($appointment->exists)
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Appointment No.') }}</label>
-                        <input type="text" value="{{ $appointment->exists ? $appointment->Appt_No : $nextApptNo }}" disabled
-                               placeholder="{{ __('Auto-generated') }}"
+                        <input type="text" value="{{ $appointment->Appt_No }}" disabled
                                class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
                         <p class="mt-1 text-xs text-slate-400">
-                            {{ $appointment->exists ? __('Cannot be changed after creation') : __('Generated automatically when saved') }}
+                            {{ __('Cannot be changed after creation') }}
                         </p>
                     </div>
+                    @endif
 
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">

@@ -20,7 +20,7 @@
             <tr>
                 <td>{{ $i+1 }}</td>
                 <td>{{ $appt->ApptTime?->format('H:i') ?? '-' }}<br><span style="font-size:8pt;color:#94a3b8;">{{ $appt->Appt_No }}</span></td>
-                <td><strong>{{ $appt->patient?->full_name ?? '-' }}</strong></td>
+                <td><strong><x-patient-link :patient="$appt->patient" /></strong></td>
                 <td style="font-family:monospace;">{{ $appt->patient?->Pt_No ?? '-' }}</td>
                 <td>{{ $appt->consultant?->full_name ?? '-' }}</td>
                 <td>{{ $appt->status }}</td>
@@ -43,7 +43,7 @@
     <thead><tr><th>{{ __('Time') }}</th><th>{{ __('Patient') }}</th><th>{{ __('Consultant') }}</th><th>{{ __('Outcome') }}</th></tr></thead>
     <tbody>
         @foreach($finished as $appt)
-            <tr><td>{{ $appt->ApptTime?->format('H:i') ?? '-' }}</td><td>{{ $appt->patient?->full_name ?? '-' }}</td><td>{{ $appt->consultant?->full_name ?? '-' }}</td><td>{{ $appt->status }}</td></tr>
+            <tr><td>{{ $appt->ApptTime?->format('H:i') ?? '-' }}</td><td><x-patient-link :patient="$appt->patient" /></td><td>{{ $appt->consultant?->full_name ?? '-' }}</td><td>{{ $appt->status }}</td></tr>
         @endforeach
     </tbody>
 </table>

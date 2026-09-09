@@ -71,7 +71,7 @@
                 <dl class="space-y-2">
                     <div>
                         <dt class="text-xs text-slate-500">{{ __('Name') }}</dt>
-                        <dd class="mt-0.5 font-semibold text-slate-900">{{ $inPatient->patient->full_name ?? '—' }}</dd>
+                        <dd class="mt-0.5 font-semibold text-slate-900"><x-patient-link :patient="$inPatient->patient" /></dd>
                     </div>
                     <div>
                         <dt class="text-xs text-slate-500">{{ __('Patient No.') }}</dt>

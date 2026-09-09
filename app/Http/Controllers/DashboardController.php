@@ -32,6 +32,15 @@ class DashboardController extends Controller
         $wardExists = $selectedWard ? Wd::where('Wd_No', $selectedWard)->exists() : false;
         $wardFilter = $wardExists ? $selectedWard : null;
 
+        // Role scope: ward-bound roles are locked to their own ward dashboard.
+        $user = $request->user();
+        $isClinician = $user->isClinician();
+        if ($user->hasRole(['charge_nurse', 'doctor', 'consultant', 'senior_nurse', 'staff_nurse', 'auxiliary'])
+            && ! $user->managesAllWards()
+            && $user->wardNo() !== null) {
+            $wardFilter = $user->wardNo();
+        }
+
         $totalBeds = Bed::count();
         $occupiedBeds = Bed::where('BedStatus', 'Occupied')->count();
 
@@ -96,7 +105,9 @@ class DashboardController extends Controller
             return $ip->DatePlaced->copy()->addDays((int) $ip->ExpStayDays)->isBefore(Carbon::today());
         })->count();
 
-        $pendingRequisitions = Wardrequisition::where('status', Wardrequisition::STATUS_PENDING)->count();
+        $pendingRequisitions = Wardrequisition::where('status', Wardrequisition::STATUS_PENDING)
+            ->when($wardFilter, fn ($q) => $q->where('Wd_No', $wardFilter))
+            ->count();
         $pendingMedications = MedicationOrder::where('status', MedicationOrder::STATUS_PENDING)->count();
 
         $nearExpiryCount = Pharmaceutical::whereNotNull('ExpiryDate')->where('ExpiryDate', '<=', Carbon::today()->addDays(30))->where('ExpiryDate', '>=', Carbon::today())->count();
@@ -135,6 +146,9 @@ class DashboardController extends Controller
         $appointmentsTodayByStatusQuery = Appointment::whereDate('ApptDate', $today);
         $appointmentsTodayByStatus = $appointmentsTodayByStatusQuery->selectRaw('status, count(*) as total')->groupBy('status')->pluck('total', 'status');
         $inConsultationTodayQuery = Appointment::with(['patient', 'room'])->whereDate('ApptDate', $today)->where('status', Appointment::STATUS_IN_CONSULTATION);
+        if ($isClinician && $user->stf_no !== null) {
+            $inConsultationTodayQuery->where('Consult_Stf_No', $user->stf_no);
+        }
         $inConsultationToday = $inConsultationTodayQuery->get();
         $appointmentsTodayCountQuery = Appointment::whereDate('ApptDate', $today);
         $appointmentsToday = $appointmentsTodayCountQuery->count();
@@ -166,6 +180,7 @@ class DashboardController extends Controller
                 ->get(['Drug_No', 'Name', 'QtyInStock', 'ReorderLvl']),
             'todayAppointments' => Appointment::with(['patient', 'consultant', 'room'])
                 ->whereDate('ApptDate', $today)
+                ->when($isClinician && $user->stf_no !== null, fn ($q) => $q->where('Consult_Stf_No', $user->stf_no))
                 ->orderBy('ApptTime')
                 ->get(),
             'trendDays' => $trendDays->values(),

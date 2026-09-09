@@ -108,6 +108,12 @@ class AllergyController extends Controller
     {
         $query = PatientAllergy::with(['patient', 'drug', 'recordedBy']);
 
+        // Role scope: restrict to visible patients (null = all).
+        $ids = $request->user()->accessiblePatientIds();
+        if ($ids !== null) {
+            $query->whereIn('Pt_No', $ids);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -150,6 +156,11 @@ class AllergyController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateAllergy($request);
+
+        if (! $this->patientInScope($request, $data['Pt_No'] ?? null)) {
+            return redirect()->route('forbidden');
+        }
+
         $data['Allergy_No'] = $this->generateId('PatientAllergy', 'Allergy_No', 'AL');
 
         PatientAllergy::create($data);
@@ -158,8 +169,12 @@ class AllergyController extends Controller
             ->with('status', __('Created allergy record :no.', ['no' => $data['Allergy_No']]));
     }
 
-    public function edit(PatientAllergy $allergy): View
+    public function edit(PatientAllergy $allergy): View|RedirectResponse
     {
+        if (! $this->patientInScope(request(), $allergy->Pt_No)) {
+            return redirect()->route('forbidden');
+        }
+
         return view('allergies.form', [
             'allergy' => $allergy,
             'patients' => Patient::orderBy('LastName')->orderBy('FirstName')->get(),
@@ -173,6 +188,11 @@ class AllergyController extends Controller
     {
         $data = $this->validateAllergy($request);
 
+        if (! $this->patientInScope($request, $allergy->Pt_No)
+            || ! $this->patientInScope($request, $data['Pt_No'] ?? null)) {
+            return redirect()->route('forbidden');
+        }
+
         $allergy->update($data);
 
         return redirect()->route('allergies.index')
@@ -181,6 +201,10 @@ class AllergyController extends Controller
 
     public function destroy(PatientAllergy $allergy): RedirectResponse
     {
+        if (! $this->patientInScope(request(), $allergy->Pt_No)) {
+            return redirect()->route('forbidden');
+        }
+
         $no = $allergy->Allergy_No;
 
         $allergy->delete();
@@ -189,8 +213,22 @@ class AllergyController extends Controller
             ->with('status', __('Deleted allergy record :no.', ['no' => $no]));
     }
 
-    protected function validateAllergy(Request $request): array
+    /**
+     * Allergy rows without a patient are visible to care-area roles;
+     * rows with a patient must fall inside the user's patient scope.
+     */
+    private function patientInScope(Request $request, ?string $ptNo): bool
     {
+        $ids = $request->user()->accessiblePatientIds();
+
+        if ($ids === null) {
+            return true;
+        }
+
+        return $ptNo === null || in_array($ptNo, $ids, true);
+    }
+
+    protected function validateAllergy(Request $request): array {
         return $request->validate([
             'Pt_No' => ['nullable', 'exists:Patient,Pt_No'],
             'Drug_No' => ['nullable', 'exists:Pharmaceutical,Drug_No'],

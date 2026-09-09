@@ -49,15 +49,16 @@
             <div class="grid grid-cols-1 gap-8">
                 {{-- Main admission details --}}
                 <div class="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+                    @if ($inPatient->exists)
                     <div>
                         <label class="mb-1 block text-sm font-medium text-slate-700">{{ __('Admission No.') }}</label>
-                        <input type="text" value="{{ $inPatient->exists ? $inPatient->In_Pt_No : $nextInPtNo }}" disabled
-                               placeholder="{{ __('Auto-generated') }}"
+                        <input type="text" value="{{ $inPatient->In_Pt_No }}" disabled
                                class="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
                         <p class="mt-1 text-xs text-slate-400">
-                            {{ $inPatient->exists ? __('Cannot be changed after creation') : __('Generated automatically when saved') }}
+                            {{ __('Cannot be changed after creation') }}
                         </p>
                     </div>
+                    @endif
 
                     <div class="sm:col-span-2">
                         <label class="mb-1 block text-sm font-medium text-slate-700">

@@ -26,6 +26,7 @@ class LocalDoctorController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateDoctor($request);
+        $data['Clinic_No'] = LocalDr::nextNo();
 
         $doctor = LocalDr::create($data);
 
@@ -66,7 +67,6 @@ class LocalDoctorController extends Controller
     protected function validateDoctor(Request $request): array
     {
         return $request->validate([
-            'Clinic_No' => ['required', 'string', 'max:10', 'unique:LocalDr,Clinic_No'],
             'FirstName' => ['nullable', 'string', 'max:50'],
             'LastName' => ['nullable', 'string', 'max:50'],
             'Address' => ['nullable', 'string', 'max:150'],

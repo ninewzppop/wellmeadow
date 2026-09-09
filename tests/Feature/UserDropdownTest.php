@@ -18,7 +18,7 @@ class UserDropdownTest extends TestCase
             'name' => 'Test Admin',
             'email' => 'admin@example.com',
             'password' => 'password123',
-            'role' => 'admin',
+            'role' => 'medical_director',
         ]));
     }
 

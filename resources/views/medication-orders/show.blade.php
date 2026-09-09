@@ -38,7 +38,7 @@
                 </p>
             </div>
             <div class="text-right text-xs text-slate-500">
-                <p><span class="font-medium text-slate-700">{{ __('Patient') }}:</span> {{ $order->patient?->full_name ?? '—' }} ({{ __('HN') }} {{ $order->Pt_No }})</p>
+                <p><span class="font-medium text-slate-700">{{ __('Patient') }}:</span> <x-patient-link :patient="$order->patient" /> ({{ __('HN') }} {{ $order->Pt_No }})</p>
                 <p><span class="font-medium text-slate-700">{{ __('Prescriber') }}:</span> {{ $order->prescriber?->full_name ?? $order->Stf_No ?? '—' }}</p>
                 @if ($order->appointment)
                     <p><span class="font-medium text-slate-700">{{ __('Appointment') }}:</span> {{ $order->Appt_No }}</p>

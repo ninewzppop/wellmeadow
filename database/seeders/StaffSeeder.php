@@ -117,6 +117,89 @@ class StaffSeeder extends Seeder
                     ['Organization' => 'County Council', 'Position' => 'Office Assistant', 'StartDate' => '2017-02-01', 'FinishDate' => '2019-08-30'],
                 ],
             ],
+            // Test accounts per role (ADR-0012): one staff row per missing position.
+            [
+                'Stf_No' => 'S1006',
+                'FirstName' => 'Rachel',
+                'LastName' => 'Kim',
+                'Address' => '17 Park Street, Bristol',
+                'TelNo' => '0117 555 0106',
+                'DOB' => '1979-05-25',
+                'Sex' => 'F',
+                'NIN' => 'MN112233A',
+                'Alloc_Wd_No' => 'WD03',
+                'positions' => [
+                    ['Pos_No' => 'P008', 'CurrSalary' => 95000, 'HrsPerWk' => 40, 'ContractType' => 'Permanent', 'PaymentType' => 'Monthly'],
+                ],
+                'qualifications' => [
+                    ['Type' => 'MBBS', 'QualDate' => '2003-06-20', 'Institution' => 'Medical College London'],
+                    ['Type' => 'FRCS', 'QualDate' => '2011-02-14', 'Institution' => 'RCS'],
+                ],
+                'experiences' => [
+                    ['Organization' => 'Bristol Royal', 'Position' => 'Registrar', 'StartDate' => '2012-04-01', 'FinishDate' => '2018-09-30'],
+                ],
+            ],
+            [
+                'Stf_No' => 'S1007',
+                'FirstName' => 'Daniel',
+                'LastName' => 'Hughes',
+                'Address' => '29 Gloucester Road, Bristol',
+                'TelNo' => '0117 555 0107',
+                'DOB' => '1986-12-08',
+                'Sex' => 'M',
+                'NIN' => 'OP445566B',
+                'Alloc_Wd_No' => 'WD02',
+                'positions' => [
+                    ['Pos_No' => 'P004', 'CurrSalary' => 42000, 'HrsPerWk' => 37.5, 'ContractType' => 'Permanent', 'PaymentType' => 'Monthly'],
+                ],
+                'qualifications' => [
+                    ['Type' => 'BSc Nursing', 'QualDate' => '2008-07-12', 'Institution' => 'City University'],
+                    ['Type' => 'RGN', 'QualDate' => '2008-11-01', 'Institution' => 'NMC'],
+                ],
+                'experiences' => [
+                    ['Organization' => 'General Infirmary', 'Position' => 'Staff Nurse', 'StartDate' => '2009-02-01', 'FinishDate' => '2015-05-31'],
+                ],
+            ],
+            [
+                'Stf_No' => 'S1008',
+                'FirstName' => 'Aisha',
+                'LastName' => 'Khan',
+                'Address' => '6 Victoria Square, Bath',
+                'TelNo' => '01225 555 0108',
+                'DOB' => '1998-03-17',
+                'Sex' => 'F',
+                'NIN' => 'QR778899C',
+                'Alloc_Wd_No' => 'WD04',
+                'positions' => [
+                    ['Pos_No' => 'P007', 'CurrSalary' => 22000, 'HrsPerWk' => 37.5, 'ContractType' => 'Permanent', 'PaymentType' => 'Monthly'],
+                ],
+                'qualifications' => [
+                    ['Type' => 'NVQ Level 3 Health Care', 'QualDate' => '2019-06-25', 'Institution' => 'Bath College'],
+                ],
+                'experiences' => [
+                    ['Organization' => 'Care Home Bath', 'Position' => 'Care Assistant', 'StartDate' => '2019-09-01', 'FinishDate' => '2022-12-31'],
+                ],
+            ],
+            [
+                'Stf_No' => 'S1009',
+                'FirstName' => 'Oliver',
+                'LastName' => 'Smith',
+                'Address' => '11 Richmond Hill, Bristol',
+                'TelNo' => '0117 555 0109',
+                'DOB' => '1990-09-09',
+                'Sex' => 'M',
+                'NIN' => 'ST001122D',
+                'Alloc_Wd_No' => 'WD11',
+                'positions' => [
+                    ['Pos_No' => 'P009', 'CurrSalary' => 34000, 'HrsPerWk' => 37.5, 'ContractType' => 'Permanent', 'PaymentType' => 'Monthly'],
+                ],
+                'qualifications' => [
+                    ['Type' => 'BSc Physiotherapy', 'QualDate' => '2012-07-10', 'Institution' => 'Weston University'],
+                ],
+                'experiences' => [
+                    ['Organization' => 'Sports Injury Clinic', 'Position' => 'Physiotherapist', 'StartDate' => '2013-01-15', 'FinishDate' => '2020-06-30'],
+                ],
+            ],
         ];
 
         foreach ($staff as $record) {
@@ -145,6 +228,10 @@ class StaffSeeder extends Seeder
             ['Stf_No' => 'S1002', 'Wd_No' => 'WD03', 'WkBegin' => today()->startOfWeek()->toDateString(), 'Shift' => 'Night'],
             ['Stf_No' => 'S1001', 'Wd_No' => 'WD02', 'WkBegin' => today()->startOfWeek()->addWeek()->toDateString(), 'Shift' => 'Night'],
             ['Stf_No' => 'S1005', 'Wd_No' => 'WD02', 'WkBegin' => today()->startOfWeek()->toDateString(), 'Shift' => 'Morning'],
+            ['Stf_No' => 'S1006', 'Wd_No' => 'WD03', 'WkBegin' => today()->startOfWeek()->toDateString(), 'Shift' => 'Morning'],
+            ['Stf_No' => 'S1007', 'Wd_No' => 'WD02', 'WkBegin' => today()->startOfWeek()->toDateString(), 'Shift' => 'Evening'],
+            ['Stf_No' => 'S1008', 'Wd_No' => 'WD04', 'WkBegin' => today()->startOfWeek()->toDateString(), 'Shift' => 'Morning'],
+            ['Stf_No' => 'S1009', 'Wd_No' => 'WD11', 'WkBegin' => today()->startOfWeek()->toDateString(), 'Shift' => 'Morning'],
         ];
 
         foreach ($rotas as $rota) {

@@ -10,8 +10,6 @@
         </h1>
         @if ($allergy->exists)
             <p class="mb-6 text-sm text-slate-500">{{ __('Allergy No.') }}: <span class="font-semibold text-slate-700">{{ $allergy->Allergy_No }}</span></p>
-        @else
-            <p class="mb-6 text-sm text-slate-500">{{ __('The allergy number is generated automatically.') }}</p>
         @endif
 
         <form method="POST" action="{{ $allergy->exists ? route('allergies.update', $allergy) : route('allergies.store') }}">

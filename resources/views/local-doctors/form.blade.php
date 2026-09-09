@@ -22,12 +22,13 @@
         <section class="rounded-lg bg-white p-6 shadow">
             <h2 class="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500">{{ __('Doctor details') }}</h2>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                @if ($editing)
                 <div>
-                    <label for="Clinic_No" class="block text-sm font-medium text-slate-700">{{ __('Clinic No *') }}</label>
-                    <input type="text" id="Clinic_No" name="Clinic_No" value="{{ old('Clinic_No', $doctor->Clinic_No) }}"
-                           {{ $editing ? 'readonly' : '' }}
-                           class="mt-1 w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-sky-500 focus:outline-none {{ $editing ? 'bg-slate-100' : '' }}">
+                    <label class="block text-sm font-medium text-slate-700">{{ __('Clinic No *') }}</label>
+                    <input type="text" value="{{ $doctor->Clinic_No }}" disabled
+                           class="mt-1 w-full rounded border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
                 </div>
+                @endif
                 <div>
                     <label for="FirstName" class="block text-sm font-medium text-slate-700">{{ __('First name') }}</label>
                     <input type="text" id="FirstName" name="FirstName" value="{{ old('FirstName', $doctor->FirstName) }}"

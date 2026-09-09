@@ -27,7 +27,8 @@
             </li>
         </ul>
 
-        {{-- Patients --}}
+        {{-- Patients (care roles only — personnel/auxiliary never see patient data) --}}
+        @role('medical_director', 'charge_nurse', 'doctor', 'consultant', 'senior_nurse', 'staff_nurse')
         <div>
             <p class="border-b border-slate-200 px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ __('Patients') }}</p>
             <ul class="mt-2 space-y-1">
@@ -68,19 +69,21 @@
                 @endforeach
             </ul>
         </div>
+        @endrole
 
         {{-- Resources --}}
         <div>
             <p class="border-b border-slate-200 px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ __('Resources') }}</p>
             <ul class="mt-2 space-y-1">
                 @foreach ([
-                    ['label' => __('Wards & Beds'), 'route' => 'wards.index'],
-                    ['label' => __('Ward report'), 'route' => 'wards.report'],
-                    ['label' => __('Rooms'), 'route' => 'rooms.index'],
-                    ['label' => __('Stock'), 'route' => 'stock.index'],
-                    ['label' => __('Pharmacy'), 'route' => 'pharmacy.index'],
-                    ['label' => __('Requisitions'), 'route' => 'requisitions.index'],
+                    ['label' => __('Wards & Beds'), 'route' => 'wards.index', 'roles' => null],
+                    ['label' => __('Ward report'), 'route' => 'wards.report', 'roles' => ['medical_director', 'personnel_officer', 'charge_nurse']],
+                    ['label' => __('Rooms'), 'route' => 'rooms.index', 'roles' => ['medical_director', 'charge_nurse', 'doctor', 'consultant', 'senior_nurse', 'staff_nurse']],
+                    ['label' => __('Stock'), 'route' => 'stock.index', 'roles' => ['medical_director', 'charge_nurse', 'doctor', 'consultant', 'senior_nurse', 'staff_nurse']],
+                    ['label' => __('Pharmacy'), 'route' => 'pharmacy.index', 'roles' => ['medical_director', 'charge_nurse', 'doctor', 'consultant', 'senior_nurse', 'staff_nurse']],
+                    ['label' => __('Requisitions'), 'route' => 'requisitions.index', 'roles' => ['medical_director', 'charge_nurse', 'senior_nurse', 'staff_nurse']],
                 ] as $item)
+                    @if ($item['roles'] === null || auth()->user()->hasRole($item['roles']))
                     <li>
                         <a href="{{ route($item['route']) }}"
                             class="flex items-center gap-3 rounded-md px-3 py-2 {{ request()->routeIs($item['route']) ? 'bg-[#112D6E]/10 text-[#112D6E]' : 'hover:bg-slate-100' }}">
@@ -113,6 +116,7 @@
                             {{ $item['label'] }}
                         </a>
                     </li>
+                    @endif
                 @endforeach
             </ul>
         </div>
@@ -122,10 +126,11 @@
             <p class="border-b border-slate-200 px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ __('Personnel') }}</p>
             <ul class="mt-2 space-y-1">
                 @foreach ([
-                    ['label' => __('Staff'), 'route' => 'staff.index'],
-                    ['label' => __('Search staff'), 'route' => 'staff.search'],
-                    ['label' => __('Rota'), 'route' => 'rota.index'],
+                    ['label' => __('Staff'), 'route' => 'staff.index', 'roles' => ['medical_director', 'personnel_officer', 'doctor', 'consultant']],
+                    ['label' => __('Search staff'), 'route' => 'staff.search', 'roles' => ['medical_director', 'personnel_officer', 'doctor', 'consultant']],
+                    ['label' => __('Rota'), 'route' => 'rota.index', 'roles' => ['medical_director', 'charge_nurse', 'doctor', 'consultant', 'senior_nurse', 'staff_nurse', 'auxiliary']],
                 ] as $item)
+                    @if (auth()->user()->hasRole($item['roles']))
                     <li>
                         <a href="{{ route($item['route']) }}"
                             class="flex items-center gap-3 rounded-md px-3 py-2 {{ request()->routeIs($item['route']) ? 'bg-[#112D6E]/10 text-[#112D6E]' : 'hover:bg-slate-100' }}">
@@ -145,11 +150,13 @@
                             {{ $item['label'] }}
                         </a>
                     </li>
+                    @endif
                 @endforeach
             </ul>
         </div>
 
-        {{-- Reference --}}
+        {{-- Reference (care roles only) --}}
+        @role('medical_director', 'charge_nurse', 'doctor', 'consultant', 'senior_nurse', 'staff_nurse')
         <div>
             <p class="border-b border-slate-200 px-3 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">{{ __('Reference') }}</p>
             <ul class="mt-2 space-y-1">
@@ -175,6 +182,7 @@
                 @endforeach
             </ul>
         </div>
+        @endrole
 
         @if (! empty($consultingAppointments) && $consultingAppointments->isNotEmpty())
             <div class="rounded-xl border border-amber-200 bg-amber-50 p-3">

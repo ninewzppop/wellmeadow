@@ -24,6 +24,7 @@ class SupplierController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $data = $this->validateSupplier($request);
+        $data['Suppl_No'] = Supplier::nextNo();
 
         $supplier = Supplier::create($data);
 
@@ -64,7 +65,6 @@ class SupplierController extends Controller
     protected function validateSupplier(Request $request): array
     {
         return $request->validate([
-            'Suppl_No' => ['required', 'string', 'max:10', 'unique:Supplier,Suppl_No'],
             'Name' => ['nullable', 'string', 'max:100'],
             'Address' => ['nullable', 'string', 'max:50'],
             'TelNo' => ['nullable', 'string', 'max:15'],

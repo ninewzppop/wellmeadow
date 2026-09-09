@@ -19,6 +19,7 @@ class InPatientTest extends TestCase
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password123',
+            'role' => 'medical_director',
         ]));
     }
 
@@ -77,14 +78,16 @@ class InPatientTest extends TestCase
         $this->assertDatabaseHas('InPatient', ['In_Pt_No' => 'IP11']);
     }
 
-    public function test_create_page_previews_next_admission_no(): void
+    public function test_create_page_hides_auto_generated_admission_no(): void
     {
         InPatient::create(['In_Pt_No' => 'IP4', 'Pt_No' => $this->createPatient()->Pt_No]);
 
         $response = $this->get('/in-patients/create');
 
         $response->assertOk();
-        $response->assertSee('value="IP5"', false);
+        $response->assertDontSee('value="IP5"', false);
+        $response->assertDontSee(__('Admission No.'));
+        $response->assertDontSee(__('Auto-generated'));
     }
 
     public function test_update_does_not_change_admission_no(): void

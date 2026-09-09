@@ -376,3 +376,57 @@ Added 2026-08-27 (ADR-0009). Header + two line tables for surgical/non-surgical 
 | History/Report | `Wardrequisitions` WHERE status=Completed + filters ward/date range; low-stock lists are `QtyInStock ≤ ReorderLvl` from masters | per ward + time period as per (n) |
 | Schema | ADD `Wardrequisitions.status`, `Received_By` — only approved change | no new tables |
 | Suppliers (l) | `Supplier` CRUD via existing `SupplierController` | Medical Director scope, no change |
+
+---
+
+# Role-based access control (RBAC)
+
+Added 2026-09-05 (ADR-0012). Grilled spec (8 sub-decisions ADR-12.1–12.8),
+owner-confirmed. Additive only: one new nullable column on `users`, new
+middleware/policies/views/seeders. Login page, Auth logic, old migrations
+and `Stf` data untouched.
+
+## Entity list
+
+| Entity | Type | Key attributes | Lifecycle |
+|---|---|---|---|
+| User | entity (`users` + `stf_no` nullable unique FK → `Stf.Stf_No`, `role` ∈ 8 values) | id PK, email unique, password hashed, role, stf_no | seeded (test accounts per role); self-service password change only |
+| Role | value object (enum string on `users.role`, no table) | one of `medical_director, personnel_officer, charge_nurse, doctor, consultant, senior_nurse, staff_nurse, auxiliary` | fixed set; seeded from Pos mapping |
+| WardScope | value object (derived per request) | `own ward` (= `staff.Alloc_Wd_No`) or `all` (medical_director, or `Alloc_Wd_No` NULL per ADR-12.5) | computed, never stored |
+| CareRelationship | derived link doctor→patients | via `Appointment.Consult_Stf_No`, any date | read-only derivation |
+| CompensationBlock | value object (presentation) | `CurrSalary, HrsPerWk, ContractType, PaymentType` — hidden from doctor/consultant | render-time only |
+
+## Relationships
+
+- User N—1 Stf (nullable, via `stf_no`; NULL = legacy/unlinked account).
+- Stf N—1 Ward primary (`Alloc_Wd_No`); Stf N—N Ward via `StfRota`.
+- Stf N—N Pos via `StfPos` (position seeds the user's role, first wins).
+- Doctor N—N Patient via `Appointment` (`Consult_Stf_No`).
+- Session 1—1 User (existing, ADR-0002).
+
+## Invariants
+
+1. `users.email` unique; `users.password` always hashed (existing).
+2. `users.role` ∈ the 8-value set; `users.stf_no` unique-or-NULL.
+3. `isAdmin()` ⟺ `role === 'medical_director'` (old `admin` value retired).
+4. Ward-scoped queries always filter by `WardScope`; `NULL` ward = all wards.
+5. Doctor queries always restrict patients to the CareRelationship set.
+6. CompensationBlock is never rendered for `doctor`/`consultant`.
+7. `personnel_officer` and `auxiliary` can never reach patient/medication
+   routes (middleware deny, not just hidden menus).
+8. Every login/logout writes `Log::info` with user id + email + IP.
+9. Deleting `Stf` sets `users.stf_no` NULL (accounts survive).
+
+## Persistence map
+
+| Concern | Storage/Query | Notes |
+|---|---|---|
+| Link + role | `ALTER users ADD stf_no VARCHAR NULL UNIQUE, FK → Stf` (+ index) | only schema change; new migration |
+| Role check (area) | `RoleMiddleware role:a,b` on route groups | redirect to `forbidden` (403 page) |
+| Role check (row) | 5 policies: Patient/Staff/Medication/Requisition/Supply | share `WardScope` + `forDoctor` helpers |
+| Doctor patient set | `WHERE Pt_No IN (SELECT Pt_No FROM Appointment WHERE Consult_Stf_No = ?)` | `Patient::forDoctor()` scope, one source |
+| Salary hiding | Blade `@role` / role check in staff views | no API to protect |
+| Sidebar/header | menus filtered by role; header shows staff name + Pos + Ward | `@role` directive |
+| Audit | `Log::info` in `AuthController` (additive) | file channel, no table |
+| Password self-change | new `PasswordController` + views, `current_password` rule | all roles |
+| Seeds | role backfill via Pos mapping + 8 test accounts | `Stf` rows unmodified |

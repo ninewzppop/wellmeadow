@@ -12,6 +12,7 @@ use App\Models\Stf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -22,6 +23,17 @@ class AppointmentController extends Controller
         $query = Appointment::with(['patient', 'consultant', 'room'])
             ->orderBy('ApptDate', 'desc')
             ->orderBy('ApptTime', 'desc');
+
+        // Role scope: doctors see only their own appointments (overrides ?consultant=).
+        $user = $request->user();
+        if ($user->isClinician() && $user->stf_no !== null) {
+            $query->where('Consult_Stf_No', $user->stf_no);
+        } else {
+            $ids = $user->accessiblePatientIds();
+            if ($ids !== null) {
+                $query->whereIn('Pt_No', $ids);
+            }
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -80,7 +92,6 @@ class AppointmentController extends Controller
             'consultants' => $consultants,
             'rooms' => $rooms,
             'statuses' => $this->formStatuses(null),
-            'nextApptNo' => $this->nextApptNo(),
             'allergyDrugs' => Pharmaceutical::orderBy('Name')->get(),
             'allergyStaff' => Stf::orderBy('LastName')->orderBy('FirstName')->get(),
             'severities' => AllergyController::SEVERITIES,
@@ -111,15 +122,23 @@ class AppointmentController extends Controller
             ->with('status', __('Created appointment :no.', ['no' => $data['Appt_No']]));
     }
 
-    public function show(Appointment $appointment): View
+    public function show(Appointment $appointment): View|RedirectResponse
     {
+        if (Gate::denies('view', $appointment)) {
+            return redirect()->route('forbidden');
+        }
+
         $appointment->load(['patient', 'consultant', 'room', 'outpatient']);
 
         return view('appointments.show', compact('appointment'));
     }
 
-    public function edit(Appointment $appointment): View
+    public function edit(Appointment $appointment): View|RedirectResponse
     {
+        if (Gate::denies('update', $appointment)) {
+            return redirect()->route('forbidden');
+        }
+
         $patients = Patient::orderBy('LastName')->orderBy('FirstName')->get();
         $consultants = Stf::orderBy('LastName')->orderBy('FirstName')->get();
         $rooms = Room::orderBy('RoomName')->get();
@@ -138,6 +157,10 @@ class AppointmentController extends Controller
 
     public function update(Request $request, Appointment $appointment): RedirectResponse
     {
+        if (Gate::denies('update', $appointment)) {
+            return redirect()->route('forbidden');
+        }
+
         $data = $this->validateAppointment($request, $appointment);
         $allergyData = $this->validateInlineAllergy($request);
 
@@ -156,6 +179,10 @@ class AppointmentController extends Controller
 
     public function destroy(Appointment $appointment): RedirectResponse
     {
+        if (Gate::denies('delete', $appointment)) {
+            return redirect()->route('forbidden');
+        }
+
         $no = $appointment->Appt_No;
 
         DB::transaction(function () use ($appointment) {

@@ -24,6 +24,7 @@ class DashboardTest extends TestCase
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password123',
+            'role' => 'medical_director',
         ]));
     }
 
@@ -65,7 +66,12 @@ class DashboardTest extends TestCase
 
     public function test_admin_only_users_page_is_forbidden_for_staff(): void
     {
-        $this->get('/users')->assertForbidden();
+        $this->actingAs(User::create([
+            'name' => 'Staff Nurse',
+            'email' => 'nurse@example.com',
+            'password' => 'password123',
+            'role' => 'staff_nurse',
+        ]))->get('/users')->assertForbidden();
     }
 
     public function test_admin_can_access_users_page(): void
@@ -74,7 +80,7 @@ class DashboardTest extends TestCase
             'name' => 'Admin User',
             'email' => 'admin@example.com',
             'password' => 'password123',
-            'role' => 'admin',
+            'role' => 'medical_director',
         ]));
 
         $this->get('/users')->assertOk();

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class AuthController extends Controller
@@ -17,25 +17,6 @@ class AuthController extends Controller
 
     public function login(Request $request): RedirectResponse
     {
-        if (! app()->environment('testing')) {
-            $request->validate([
-                'g-recaptcha-response' => ['required'],
-            ]);
-
-            $recaptchaResponse = $request->input('g-recaptcha-response');
-            $recaptcha = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
-                'secret' => config('recaptcha.secret_key'),
-                'response' => $recaptchaResponse,
-                'remoteip' => $request->ip(),
-            ]);
-
-            if (! $recaptcha->json('success')) {
-                return back()
-                    ->withErrors(['g-recaptcha-response' => 'reCAPTCHA verification failed. Please try again.'])
-                    ->withInput($request->only('email'));
-            }
-        }
-
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
@@ -49,12 +30,28 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
+        Log::info('auth.login', [
+            'user_id' => Auth::id(),
+            'email' => $credentials['email'],
+            'ip' => $request->ip(),
+        ]);
+
         return redirect()->intended(route('dashboard.index'));
     }
 
     public function logout(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+
         Auth::logout();
+
+        if ($user !== null) {
+            Log::info('auth.logout', [
+                'user_id' => $user->getAuthIdentifier(),
+                'email' => $user->email,
+                'ip' => $request->ip(),
+            ]);
+        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

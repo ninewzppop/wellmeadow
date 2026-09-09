@@ -8,6 +8,7 @@ use App\Models\Patient;
 use App\Models\Wd;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class InPatientController extends Controller
@@ -16,6 +17,21 @@ class InPatientController extends Controller
     {
         $query = InPatient::with(['patient', 'bed.ward'])
             ->orderBy('DatePlaced', 'desc');
+
+        // Role scope: ward roles are locked to their own ward (overrides ?ward=).
+        $user = $request->user();
+        if (! $user->managesAllWards()) {
+            $query->whereHas('bed', fn ($bq) => $bq->where('Wd_No', $user->wardNo()));
+        } elseif ($request->filled('ward')) {
+            $query->whereHas('bed', function ($bq) use ($request) {
+                $bq->where('Wd_No', $request->ward);
+            });
+        }
+
+        // Doctors additionally see only their own patients.
+        if ($user->isClinician()) {
+            $query->whereIn('Pt_No', $user->accessiblePatientIds() ?? []);
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -26,12 +42,6 @@ class InPatientController extends Controller
                             ->orWhere('FirstName', 'like', "%{$search}%")
                             ->orWhere('LastName', 'like', "%{$search}%");
                     });
-            });
-        }
-
-        if ($request->filled('ward')) {
-            $query->whereHas('bed', function ($bq) use ($request) {
-                $bq->where('Wd_No', $request->ward);
             });
         }
 
@@ -64,7 +74,14 @@ class InPatientController extends Controller
     public function create(): View
     {
         $patients = Patient::orderBy('LastName')->orderBy('FirstName')->get();
-        $beds = Bed::with('ward')->where('BedStatus', 'Available')->orderBy('Bed_No')->get();
+        $beds = Bed::with('ward')->where('BedStatus', 'Available')->orderBy('Bed_No');
+
+        // Ward roles admit into their own ward only.
+        if (! auth()->user()->managesAllWards()) {
+            $beds->where('Wd_No', auth()->user()->wardNo());
+        }
+
+        $beds = $beds->get();
         $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         return view('in-patients.form', [
@@ -72,7 +89,6 @@ class InPatientController extends Controller
             'patients' => $patients,
             'beds' => $beds,
             'wards' => $wards,
-            'nextInPtNo' => InPatient::nextNo(),
         ]);
     }
 
@@ -80,6 +96,14 @@ class InPatientController extends Controller
     {
         $data = $this->validateInPatient($request);
         $data['In_Pt_No'] = InPatient::nextNo();
+
+        // Ward roles cannot place patients into another ward's beds.
+        if (! $request->user()->managesAllWards() && ! empty($data['Bed_No'])) {
+            $ward = Bed::where('Bed_No', $data['Bed_No'])->value('Wd_No');
+            if ($ward !== $request->user()->wardNo()) {
+                return redirect()->route('forbidden');
+            }
+        }
 
         $inPatient = InPatient::create($data);
 
@@ -92,20 +116,34 @@ class InPatientController extends Controller
             ->with('status', __('Admitted patient :no.', ['no' => $inPatient->In_Pt_No]));
     }
 
-    public function show(InPatient $inPatient): View
+    public function show(InPatient $inPatient): View|RedirectResponse
     {
+        if (Gate::denies('view', $inPatient)) {
+            return redirect()->route('forbidden');
+        }
+
         $inPatient->load(['patient', 'bed.ward']);
 
         return view('in-patients.show', compact('inPatient'));
     }
 
-    public function edit(InPatient $inPatient): View
+    public function edit(InPatient $inPatient): View|RedirectResponse
     {
+        if (Gate::denies('update', $inPatient)) {
+            return redirect()->route('forbidden');
+        }
+
         $patients = Patient::orderBy('LastName')->orderBy('FirstName')->get();
         $beds = Bed::with('ward')->where(function ($q) use ($inPatient) {
             $q->where('BedStatus', 'Available')
                 ->orWhere('Bed_No', $inPatient->Bed_No);
-        })->orderBy('Bed_No')->get();
+        })->orderBy('Bed_No');
+
+        if (! auth()->user()->managesAllWards()) {
+            $beds->where('Wd_No', auth()->user()->wardNo());
+        }
+
+        $beds = $beds->get();
         $wards = Wd::orderBy('Wd_No')->get()->sortBy(fn (Wd $w) => (int) preg_replace('/\D/', '', $w->Wd_No))->values();
 
         return view('in-patients.form', compact('inPatient', 'patients', 'beds', 'wards'));
@@ -113,8 +151,19 @@ class InPatientController extends Controller
 
     public function update(Request $request, InPatient $inPatient): RedirectResponse
     {
+        if (Gate::denies('update', $inPatient)) {
+            return redirect()->route('forbidden');
+        }
+
         $oldBedNo = $inPatient->Bed_No;
         $data = $this->validateInPatient($request);
+
+        if (! $request->user()->managesAllWards() && ! empty($data['Bed_No'])) {
+            $ward = Bed::where('Bed_No', $data['Bed_No'])->value('Wd_No');
+            if ($ward !== $request->user()->wardNo()) {
+                return redirect()->route('forbidden');
+            }
+        }
 
         $inPatient->update($data);
 
@@ -132,6 +181,10 @@ class InPatientController extends Controller
 
     public function destroy(InPatient $inPatient): RedirectResponse
     {
+        if (Gate::denies('delete', $inPatient)) {
+            return redirect()->route('forbidden');
+        }
+
         $no = $inPatient->In_Pt_No;
         $bedNo = $inPatient->Bed_No;
 
